@@ -4,6 +4,7 @@
   "description": "quick bash cmd alias",
   "main": "./bin/index.js",
   "scripts": {
+    "build": "npm remove -g ucmd && npm i -g .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
