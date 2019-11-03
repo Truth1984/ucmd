@@ -1,0 +1,29 @@
+{
+  "name": "ucmd",
+  "version": "1.0.0",
+  "description": "quick bash cmd alias",
+  "main": "./bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Truth1984/ucmd.git"
+  },
+  "bin": {
+    "u": "./bin/index.js"
+  },
+  "keywords": [
+    "ucmd",
+    "bash"
+  ],
+  "author": "Awada Z",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Truth1984/ucmd/issues"
+  },
+  "homepage": "https://github.com/Truth1984/ucmd#readme",
+  "dependencies": {
+    "yargs": "^14.2.0"
+  }
+}
