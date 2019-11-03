@@ -1,5 +1,7 @@
 var yargs = require("yargs");
 
+var middleware = [];
+
 module.exports = class ucmd {
   constructor(main, ...options) {
     this.main = main;
@@ -33,7 +35,14 @@ module.exports = class ucmd {
   perform(argv) {
     if (this._result.length == 0) this.describer({ main: "program command" });
     this._result.push(argv);
-    yargs.command(...this._result).argv;
+    middleware.push(this._result);
+    this._result = [];
+    return this;
+  }
+
+  run() {
+    for (let i of middleware) yargs = yargs.command(...i);
+    yargs.argv;
     return this;
   }
 };

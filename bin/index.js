@@ -11,3 +11,7 @@ new ucmd("port", "portnum")
   .perform(argv => {
     cmd("lsof -i tcp:" + (argv._[1] ? argv._[1] : argv.p), true);
   });
+
+new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig en0 | grep 192.168", true));
+
+new ucmd().run();
