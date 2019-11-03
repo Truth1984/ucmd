@@ -2,6 +2,7 @@
 
 var ucmd = require("./_helper");
 var cmd = require("./_cmd");
+let random = () => Math.floor(Math.random() * 10000).toString();
 
 new ucmd("port", "portnum")
   .describer({
@@ -13,5 +14,14 @@ new ucmd("port", "portnum")
   });
 
 new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig en0 | grep 192.168", true));
+
+new ucmd("targz", "path")
+  .describer({ main: "typical tar command", options: { arg: "p", describe: "path" } })
+  .perform(argv => {
+    let target = argv._[1] ? argv._[1] : argv.p;
+    let dest = target.split(".")[0] + random();
+    let command = `mkdir ${dest} && tar -xf ${target} -C ${dest} && cd ${dest} && cd * && ./configure && make && sudo make install`;
+    cmd(command, true);
+  });
 
 new ucmd().run();
