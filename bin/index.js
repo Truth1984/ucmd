@@ -28,7 +28,7 @@ new ucmd("open", "location")
   .describer({ main: "open the file or location", options: [{ arg: "l", describe: "location", default: "." }] })
   .perform(argv => {
     if (process.platform == "darwin") cmd(`open ${argv.l}`);
-    if (process.platform == "linux") cmd(`nautilus ${argv.l}`);
+    if (process.platform == "linux") cmd(`xdg-open ${argv.l}`);
   });
 
 new ucmd().run();
