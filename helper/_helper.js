@@ -20,7 +20,16 @@ module.exports = class ucmd {
         this.main,
         description.main,
         args => {
-          if (Array.isArray(description.options)) for (let i of description.options) args.positional(i.arg, i);
+          if (Array.isArray(description.options))
+            for (let i in description.options)
+              args
+                .positional(description.options[i].arg, description.options[i])
+                .check(argv => {
+                  if (argv._[Number.parseInt(i) + 1] != undefined)
+                    argv[description.options[i].arg] =
+                      argv._[Number.parseInt(i) + 1];
+                  return true;
+                });
           else args.positional(description.options.arg, description.options);
         }
       ];

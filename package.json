@@ -25,6 +25,10 @@
   },
   "homepage": "https://github.com/Truth1984/ucmd#readme",
   "dependencies": {
+    "convert-units": "^2.3.4",
+    "download": "^7.1.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "thread_pools": "^2.4.4",
     "yargs": "^14.2.0"
   }
 }
