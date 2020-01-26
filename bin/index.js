@@ -54,7 +54,7 @@ new ucmd("download", "url", "filename")
     if (!/^[~!]|^(.\/)/.test(filename))
       filename = os.homedir + "/Downloads/" + filename;
     let url = argv.u;
-    if (/m3u8$/.test(url)) {
+    if (/\.m3u8/.test(url)) {
       download.m3u8(url, filename);
     } else {
       download.download(url, filename);
