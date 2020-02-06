@@ -3,6 +3,7 @@
 var ucmd = require("../helper/_helper");
 var cmd = require("../helper/_cmd");
 var download = require("../helper/downloader");
+var recorder = require("../helper/quickRecord");
 var os = require("os");
 let random = () => Math.floor(Math.random() * 10000).toString();
 
@@ -59,6 +60,23 @@ new ucmd("download", "url", "filename")
     } else {
       download.download(url, filename);
     }
+  });
+
+new ucmd("quick", "name", "cmd")
+  .describer({
+    main: "quick record cmd into local file",
+    options: [
+      { arg: "n", describe: "name of the cmd" },
+      { arg: "c", describe: "command to record" },
+      { arg: "d", describe: "display the command" },
+      { arg: "r", describe: "remove file with name" }
+    ]
+  })
+  .perform(argv => {
+    if (argv.d) return recorder.display();
+    if (argv.c) return recorder.record(argv.n, argv.c);
+    if (argv.n) return cmd(recorder.perform(argv.n));
+    if (argv.r) return recorder.remove(argv.r);
   });
 
 new ucmd().run();
