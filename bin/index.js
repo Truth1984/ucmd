@@ -27,8 +27,10 @@ new ucmd("targz", "path")
   })
   .perform(argv => {
     let target = argv._[1] ? argv._[1] : argv.p;
-    let dest = target.split(".")[0] + random();
-    let command = `mkdir ${dest} && tar -xf ${target} -C ${dest} && cd ${dest} && cd * && ./configure && make && sudo make install`;
+    console.log(
+      "optional run ./configure & make & sudo make install afterwards"
+    );
+    let command = `tar -xf ${target}`;
     cmd(command, true);
   });
 
@@ -75,7 +77,7 @@ new ucmd("quick", "name", "cmd")
   .perform(argv => {
     if (argv.d) return recorder.display();
     if (argv.c) return recorder.record(argv.n, argv.c);
-    if (argv.n) return cmd(recorder.perform(argv.n));
+    if (argv.n) return cmd(recorder.perform(argv.n), true);
     if (argv.r) return recorder.remove(argv.r);
   });
 
