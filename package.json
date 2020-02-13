@@ -28,6 +28,7 @@
     "convert-units": "^2.3.4",
     "download": "^7.1.0",
     "fluent-ffmpeg": "^2.1.2",
+    "readdirp": "^3.3.0",
     "thread_pools": "^2.4.4",
     "yargs": "^14.2.0"
   }

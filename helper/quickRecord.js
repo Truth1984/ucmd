@@ -12,13 +12,12 @@ qr.record = (name, cmd) => {
 qr.perform = name => {
   let cmdPath = paths.join(qr.quickPath, name);
   if (fs.existsSync(cmdPath)) return fs.readFileSync(cmdPath).toString();
-  return `echo <quick> ${name} undefined`;
+  console.log(`<quick> ${name} undefined`);
 };
 
 qr.display = () => {
   let result = {};
-  for (let i of fs.readdirSync(qr.quickPath))
-    result[i] = fs.readFileSync(paths.join(qr.quickPath, i)).toString();
+  for (let i of fs.readdirSync(qr.quickPath)) result[i] = fs.readFileSync(paths.join(qr.quickPath, i)).toString();
   console.table(result);
 };
 

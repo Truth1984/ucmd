@@ -5,6 +5,9 @@ var cmd = require("../helper/_cmd");
 var download = require("../helper/downloader");
 var recorder = require("../helper/quickRecord");
 var os = require("os");
+var fs = require("fs");
+var read = require("readdirp");
+var paths = require("path");
 let random = () => Math.floor(Math.random() * 10000).toString();
 
 new ucmd("port", "portnum")
@@ -16,9 +19,7 @@ new ucmd("port", "portnum")
     cmd("lsof -i tcp:" + (argv._[1] ? argv._[1] : argv.p), true);
   });
 
-new ucmd("ip")
-  .describer({ main: "find local ip adress" })
-  .perform(argv => cmd("ifconfig en0 | grep 192.168", true));
+new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig en0 | grep 192.168", true));
 
 new ucmd("targz", "path")
   .describer({
@@ -27,9 +28,7 @@ new ucmd("targz", "path")
   })
   .perform(argv => {
     let target = argv._[1] ? argv._[1] : argv.p;
-    console.log(
-      "optional run ./configure & make & sudo make install afterwards"
-    );
+    console.log("optional run ./configure & make & sudo make install afterwards");
     let command = `tar -xf ${target}`;
     cmd(command, true);
   });
@@ -54,8 +53,7 @@ new ucmd("download", "url", "filename")
   })
   .perform(argv => {
     let filename = argv.f;
-    if (!/^[~!]|^(.\/)/.test(filename))
-      filename = os.homedir + "/Downloads/" + filename;
+    if (!/^[~!]|^(.\/)/.test(filename)) filename = os.homedir + "/Downloads/" + filename;
     let url = argv.u;
     if (/\.m3u8/.test(url)) {
       download.m3u8(url, filename);
@@ -77,8 +75,40 @@ new ucmd("quick", "name", "cmd")
   .perform(argv => {
     if (argv.d) return recorder.display();
     if (argv.c) return recorder.record(argv.n, argv.c);
-    if (argv.n) return cmd(recorder.perform(argv.n), true);
+    if (argv.n) {
+      let result = recorder.perform(argv.n);
+      return result ? cmd(result, true) : "";
+    }
     if (argv.r) return recorder.remove(argv.r);
+  });
+
+new ucmd("search", "target", "basedir")
+  .describer({
+    main: "find the file in location, basedir default to current location",
+    options: [
+      { arg: "t", describe: "target filename" },
+      { arg: "b", describe: "base directory of the file" },
+      { arg: "d", describe: "directory only" },
+      { arg: "f", describe: "file only" },
+      { arg: "s", describe: "subdirectory depth", default: 2 }
+    ]
+  })
+  .perform(async argv => {
+    if (!argv.b) argv.b = process.cwd();
+    let target = argv.t;
+    let basedir = argv.b;
+    let directoryOnly = argv.d;
+    let fileOnly = argv.f;
+    let depth = argv.s;
+
+    let nameArr = await read.promise(basedir, { type: "files_directories", depth });
+
+    if (!directoryOnly && !fileOnly) {
+      for (let i of nameArr) if (i.basename.indexOf(target)) console.log(i);
+    } else {
+      for (let i of nameArr)
+        if (i.basename.indexOf(target) > -1 && (i.dirent.isDirectory() ? directoryOnly : fileOnly)) console.log(i);
+    }
   });
 
 new ucmd().run();
