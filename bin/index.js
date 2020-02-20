@@ -13,18 +13,23 @@ let random = () => Math.floor(Math.random() * 10000).toString();
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
-    options: { arg: "p", describe: "port number", default: "3000" }
+    options: [{ arg: "p", describe: "port number" }]
   })
   .perform(argv => {
-    cmd("lsof -i tcp:" + (argv._[1] ? argv._[1] : argv.p), true);
+    if (os.platform() == "win32") {
+      if (!argv.p) return cmd("netstat -bn");
+      return cmd("netstat -bn | grep " + argv.p);
+    }
+    if (!argv.p) return cmd("sudo netstat -plntu");
+    return cmd("sudo netstat -lntup | grep " + argv.p);
   });
 
-new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig en0 | grep 192.168", true));
+new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig | inet", true));
 
 new ucmd("targz", "path")
   .describer({
     main: "typical tar command",
-    options: { arg: "p", describe: "path" }
+    options: [{ arg: "p", describe: "path" }]
   })
   .perform(argv => {
     let target = argv._[1] ? argv._[1] : argv.p;
