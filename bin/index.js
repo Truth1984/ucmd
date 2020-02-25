@@ -24,7 +24,7 @@ new ucmd("port", "portnum")
     return cmd("sudo netstat -lntup | grep " + argv.p);
   });
 
-new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig | inet", true));
+new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig | grep inet", true));
 
 new ucmd("targz", "path")
   .describer({
