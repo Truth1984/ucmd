@@ -117,4 +117,13 @@ new ucmd("search", "target", "basedir")
     }
   });
 
+new ucmd("sysinfo").describer({ main: "display system information" }).perform(argc => {
+  console.log({
+    hostname: os.hostname(),
+    platform: os.platform(),
+    arch: os.arch()
+  });
+  cmd("lsb_release -a");
+});
+
 new ucmd().run();
