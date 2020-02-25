@@ -73,6 +73,7 @@ new ucmd("quick", "name", "cmd")
     options: [
       { arg: "n", describe: "name of the cmd" },
       { arg: "c", describe: "command to record" },
+      { arg: "a", describe: "append to end of line" },
       { arg: "d", describe: "display the command" },
       { arg: "r", describe: "remove file with name" }
     ]
@@ -82,7 +83,7 @@ new ucmd("quick", "name", "cmd")
     if (argv.c) return recorder.record(argv.n, argv.c);
     if (argv.n) {
       let result = recorder.perform(argv.n);
-      return result ? cmd(result, true) : "";
+      return result ? cmd(argv.a ? result + " " + argv.a : result, true) : "";
     }
     if (argv.r) return recorder.remove(argv.r);
   });
