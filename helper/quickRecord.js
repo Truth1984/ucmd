@@ -24,6 +24,7 @@ qr.display = () => {
 qr.remove = name => {
   let target = paths.join(qr.quickPath, name);
   if (fs.existsSync(target)) fs.unlinkSync(target);
+  qr.display();
 };
 
 module.exports = qr;
