@@ -17,7 +17,8 @@ qr.perform = name => {
 
 qr.display = () => {
   let result = {};
-  for (let i of fs.readdirSync(qr.quickPath)) result[i] = fs.readFileSync(paths.join(qr.quickPath, i)).toString();
+  for (let i of fs.readdirSync(qr.quickPath).filter(item => item[0] != "."))
+    result[i] = fs.readFileSync(paths.join(qr.quickPath, i)).toString();
   console.table(result);
 };
 

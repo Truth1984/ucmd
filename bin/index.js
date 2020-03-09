@@ -73,7 +73,7 @@ new ucmd("quick", "name", "cmd")
     options: [
       { arg: "n", describe: "name of the cmd" },
       { arg: "c", describe: "command to record" },
-      { arg: "a", describe: "append to end of line" },
+      { arg: "a", describe: "append command to end of line" },
       { arg: "d", describe: "display the command" },
       { arg: "r", describe: "remove file with name" }
     ]
@@ -145,6 +145,22 @@ new ucmd("ssh", "address", "username")
     if (argv.a.toString().indexOf("@") == -1) finalAddress = argv.u + "@" + argv.a;
     cmd("ssh-copy-id -i ~/.ssh/id_rsa.pub " + finalAddress);
     if (argv.n) cmd(`u quick ssh${argv.n} "ssh ${finalAddress}"`);
+  });
+
+new ucmd("gitclone", "name", "user")
+  .describer({
+    main: "git clone into current folder",
+    options: [
+      { arg: "n", describe: "name of the project" },
+      { arg: "u", describe: "username", default: "Truth1984" },
+      { arg: "p", describe: "path of destination", default: "~/Documents" }
+    ]
+  })
+  .perform(argv => {
+    let user = argv.u;
+    let project = argv.n;
+    let dest = argv.p;
+    cmd(`git clone https://github.com/${user}/${project}.git ${dest}`);
   });
 
 new ucmd().run();
