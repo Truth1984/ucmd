@@ -117,13 +117,34 @@ new ucmd("search", "target", "basedir")
     }
   });
 
-new ucmd("sysinfo").describer({ main: "display system information" }).perform(argc => {
+new ucmd("sysinfo").describer({ main: "display system information" }).perform(argv => {
   console.log({
     hostname: os.hostname(),
     platform: os.platform(),
-    arch: os.arch()
+    arch: os.arch(),
+    username: os.userInfo().username
   });
   cmd("lsb_release -a");
 });
+
+new ucmd("ssh", "address", "username")
+  .describer({
+    main: "use keygen to generate key pairs",
+    options: [
+      { arg: "a", describe: "address" },
+      { arg: "u", describe: "username of the host", default: os.userInfo().username },
+      { arg: "n", describe: "name of allias" },
+      { arg: "r", describe: "refresh keygen token" }
+    ]
+  })
+  .perform(argv => {
+    let keygen = "ssh-keygen -t rsa -b 4096";
+    if (argv.r) cmd(keygen);
+    cmd(`if ! [ -f $HOME/.ssh/id_rsa ]; then ${keygen}; fi;`);
+    let finalAddress = argv.a;
+    if (argv.a.toString().indexOf("@") == -1) finalAddress = argv.u + "@" + argv.a;
+    cmd("ssh-copy-id -i ~/.ssh/id_rsa.pub " + finalAddress);
+    if (argv.n) cmd(`u quick ssh${argv.n} "ssh ${finalAddress}"`);
+  });
 
 new ucmd().run();
