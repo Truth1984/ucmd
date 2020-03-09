@@ -153,13 +153,13 @@ new ucmd("gitclone", "name", "user")
     options: [
       { arg: "n", describe: "name of the project" },
       { arg: "u", describe: "username", default: "Truth1984" },
-      { arg: "p", describe: "path of destination", default: "~/Documents" }
+      { arg: "d", describe: "destination of download" }
     ]
   })
   .perform(argv => {
     let user = argv.u;
     let project = argv.n;
-    let dest = argv.p;
+    let dest = argv.d ? argv.d : `~/Documents/${project}`;
     cmd(`git clone https://github.com/${user}/${project}.git ${dest}`);
   });
 
