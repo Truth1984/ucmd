@@ -133,7 +133,7 @@ new ucmd("ssh", "address", "username")
     options: [
       { arg: "a", describe: "address" },
       { arg: "u", describe: "username of the host", default: os.userInfo().username },
-      { arg: "n", describe: "name of allias" },
+      { arg: "n", describe: "name of alias" },
       { arg: "r", describe: "refresh keygen token" }
     ]
   })
@@ -168,12 +168,25 @@ new ucmd("addPath", "name", "value")
     main: "add path variable to ~/.bash_mine",
     options: [
       { arg: "n", describe: "name of the path" },
-      { arg: "v", describe: "value of the path" }
+      { arg: "v", describe: "value of the path" },
+      { arg: "a", describe: "alias, can use command directly" },
+      { arg: "e", describe: "environmental variable as $" },
+      { arg: "p", describe: "PATH variable, typical sbin" }
     ]
   })
   .perform(argv => {
-    if (!(argv.n && argv.v)) return console.log("arguments empty");
-    cmd(`echo "export ${argv.n}=${argv.v}" >> ~/.bash_mine`);
+    let target = `>> ~/.bash_mine`;
+    if (!(argv.a || argv.e || argv.p)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
+    if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
+    if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
+    if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
   });
+
+new ucmd("unlock", "path")
+  .describer({
+    main: "check which process is using the lock",
+    options: [{ arg: "p", describe: "path of the locked file" }]
+  })
+  .perform(argv => cmd("sudo fuser -v " + argv.p));
 
 new ucmd().run();
