@@ -163,4 +163,17 @@ new ucmd("gitclone", "name", "user")
     cmd(`git clone https://github.com/${user}/${project}.git ${dest}`);
   });
 
+new ucmd("addPath", "name", "value")
+  .describer({
+    main: "add path variable to ~/.bash_mine",
+    options: [
+      { arg: "n", describe: "name of the path" },
+      { arg: "v", describe: "value of the path" }
+    ]
+  })
+  .perform(argv => {
+    if (!(argv.n && argv.v)) return console.log("arguments empty");
+    cmd(`echo "export ${argv.n}=${argv.v}" >> ~/.bash_mine`);
+  });
+
 new ucmd().run();
