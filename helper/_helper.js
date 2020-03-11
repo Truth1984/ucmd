@@ -10,7 +10,7 @@ module.exports = class ucmd {
   }
 
   /**
-   * @param {{main:string,options:[{arg:string, describe:string, default:any}]|{arg:string, describe:string, default:any}}} description
+   * @param {{main:string,options:[{arg:string, describe:string, default:any, boolean:boolean}]|{arg:string, describe:string, default:any, boolean:boolean}}} description
    */
   describer(description) {
     if (this.options.length == 0) {
@@ -21,15 +21,17 @@ module.exports = class ucmd {
         description.main,
         args => {
           if (Array.isArray(description.options))
-            for (let i in description.options)
-              args
-                .positional(description.options[i].arg, description.options[i])
-                .check(argv => {
-                  if (argv._[Number.parseInt(i) + 1] != undefined)
-                    argv[description.options[i].arg] =
-                      argv._[Number.parseInt(i) + 1];
-                  return true;
-                });
+            for (let i in description.options) {
+              if (description.options[i].boolean) {
+                delete description.options[i]["boolean"];
+                description.options[i].type = "boolean";
+              }
+              args.positional(description.options[i].arg, description.options[i]).check(argv => {
+                if (argv._[Number.parseInt(i) + 1] != undefined)
+                  argv[description.options[i].arg] = argv._[Number.parseInt(i) + 1];
+                return true;
+              });
+            }
           else args.positional(description.options.arg, description.options);
         }
       ];

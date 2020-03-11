@@ -74,7 +74,7 @@ new ucmd("quick", "name", "cmd")
       { arg: "n", describe: "name of the cmd" },
       { arg: "c", describe: "command to record" },
       { arg: "a", describe: "append command to end of line" },
-      { arg: "d", describe: "display the command" },
+      { arg: "d", describe: "display the command", boolean: true },
       { arg: "r", describe: "remove file with name" }
     ]
   })
@@ -94,8 +94,8 @@ new ucmd("search", "target", "basedir")
     options: [
       { arg: "t", describe: "target filename" },
       { arg: "b", describe: "base directory of the file" },
-      { arg: "d", describe: "directory only" },
-      { arg: "f", describe: "file only" },
+      { arg: "d", describe: "directory only", boolean: true },
+      { arg: "f", describe: "file only", boolean: true },
       { arg: "s", describe: "subdirectory depth", default: 2 }
     ]
   })
@@ -134,7 +134,7 @@ new ucmd("ssh", "address", "username")
       { arg: "a", describe: "address" },
       { arg: "u", describe: "username of the host", default: os.userInfo().username },
       { arg: "n", describe: "name of alias" },
-      { arg: "r", describe: "refresh keygen token" }
+      { arg: "r", describe: "refresh keygen token", boolean: true }
     ]
   })
   .perform(argv => {
@@ -169,17 +169,18 @@ new ucmd("addPath", "name", "value")
     options: [
       { arg: "n", describe: "name of the path" },
       { arg: "v", describe: "value of the path" },
-      { arg: "a", describe: "alias, can use command directly" },
-      { arg: "e", describe: "environmental variable as $" },
-      { arg: "p", describe: "PATH variable, typical sbin" }
+      { arg: "a", describe: "alias, can use command directly", boolean: true },
+      { arg: "e", describe: "environmental variable as $", boolean: true },
+      { arg: "p", describe: "PATH variable, typical sbin", boolean: true }
     ]
   })
   .perform(argv => {
     let target = `>> ~/.bash_mine`;
     if (!(argv.a || argv.e || argv.p)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
-    if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
-    if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
-    if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
+    console.log(argv);
+    // if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
+    // if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
+    // if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
   });
 
 new ucmd("unlock", "path")
