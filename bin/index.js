@@ -177,10 +177,9 @@ new ucmd("addPath", "name", "value")
   .perform(argv => {
     let target = `>> ~/.bash_mine`;
     if (!(argv.a || argv.e || argv.p)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
-    console.log(argv);
-    // if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
-    // if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
-    // if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
+    if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
+    if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
+    if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
   });
 
 new ucmd("unlock", "path")
