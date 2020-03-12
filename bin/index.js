@@ -180,6 +180,7 @@ new ucmd("addPath", "name", "value")
     if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
     if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
     if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
+    cmd("source ~/.bash_mine");
   });
 
 new ucmd("unlock", "path")
