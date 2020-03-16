@@ -190,4 +190,22 @@ new ucmd("unlock", "path")
   })
   .perform(argv => cmd("sudo fuser -v " + argv.p));
 
+new ucmd("docker")
+  .describer({
+    main: "docker additional command",
+    options: [
+      { arg: "c", describe: "clean <none> images", boolean: true },
+      { arg: "i", describe: "images display", boolean: true },
+      { arg: "p", describe: "process list AKA containter", boolean: true },
+      { arg: "a", describe: "all display", boolean: true },
+      { arg: "n", describe: "network status" }
+    ]
+  })
+  .perform(argv => {
+    if (argv.c) cmd("sudo docker system prune");
+    if (argv.i) cmd("sudo docker images" + (argv.a ? " -a" : ""));
+    if (argv.p) cmd("sudo docker ps" + (argv.a ? " -a" : ""));
+    if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
+  });
+
 new ucmd().run();
