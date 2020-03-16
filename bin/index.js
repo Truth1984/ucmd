@@ -171,16 +171,19 @@ new ucmd("addPath", "name", "value")
       { arg: "v", describe: "value of the path" },
       { arg: "a", describe: "alias, can use command directly", boolean: true },
       { arg: "e", describe: "environmental variable as $", boolean: true },
-      { arg: "p", describe: "PATH variable, typical sbin", boolean: true }
+      { arg: "p", describe: "PATH variable, typical sbin", boolean: true },
+      { arg: "d", describe: "display bash_mine", boolean: true }
     ]
   })
   .perform(argv => {
     let target = `>> ~/.bash_mine`;
-    if (!(argv.a || argv.e || argv.p)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
+    if (!(argv.a || argv.e || argv.p || argv.d)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
+    if (!argv.d && !argv.n) return console.log("exit:1 name of the path undefined");
+    if ((argv.a || argv.e) && !argv.v) return console.log("exit:1 value of the path undefined");
     if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
     if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
     if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
-    cmd("source ~/.bash_mine");
+    if (argv.d) cmd("cat ~/.bash_mine");
   });
 
 new ucmd("unlock", "path")
