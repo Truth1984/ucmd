@@ -13,7 +13,7 @@ let random = () => Math.floor(Math.random() * 10000).toString();
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
-    options: [{ arg: "p", describe: "port number" }]
+    options: [{ arg: "p", describe: "port number or process name" }]
   })
   .perform(argv => {
     if (os.platform() == "win32") {
@@ -25,6 +25,16 @@ new ucmd("port", "portnum")
   });
 
 new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig | grep inet", true));
+
+new ucmd("network")
+  .describer({
+    main: "display live network"
+    // options: [{ arg: "m", describe: "monitor network status", boolean: true }]
+  })
+  .perform(argv => {
+    // if (argv.m)
+    return cmd("sudo nethogs -sa");
+  });
 
 new ucmd("targz", "path")
   .describer({
