@@ -127,15 +127,21 @@ new ucmd("search", "target", "basedir")
     }
   });
 
-new ucmd("sysinfo").describer({ main: "display system information" }).perform(argv => {
-  console.log({
-    hostname: os.hostname(),
-    platform: os.platform(),
-    arch: os.arch(),
-    username: os.userInfo().username
+new ucmd("sysinfo")
+  .describer({
+    main: "display system information",
+    options: [{ arg: "d", describe: "disk information", boolean: true }]
+  })
+  .perform(argv => {
+    if (argv.d) return cmd("df -h");
+    console.log({
+      hostname: os.hostname(),
+      platform: os.platform(),
+      arch: os.arch(),
+      username: os.userInfo().username
+    });
+    cmd("lsb_release -a");
   });
-  cmd("lsb_release -a");
-});
 
 new ucmd("ssh", "address", "username")
   .describer({
