@@ -33,7 +33,7 @@ new ucmd("network")
   })
   .perform(argv => {
     // if (argv.m)
-    return cmd("sudo nethogs -sa");
+    return cmd("sudo nethogs -s");
   });
 
 new ucmd("targz", "path")
