@@ -13,9 +13,9 @@ let random = () => Math.floor(Math.random() * 10000).toString();
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
-    options: [{ arg: "p", describe: "port number or process name" }]
+    options: [{ arg: "p", describe: "port number or process name" }],
   })
-  .perform(argv => {
+  .perform((argv) => {
     if (os.platform() == "win32") {
       if (!argv.p) return cmd("netstat -bn");
       return cmd("netstat -bn | grep " + argv.p);
@@ -24,14 +24,14 @@ new ucmd("port", "portnum")
     return cmd("sudo netstat -lntup | grep " + argv.p);
   });
 
-new ucmd("ip").describer({ main: "find local ip adress" }).perform(argv => cmd("ifconfig | grep inet", true));
+new ucmd("ip").describer({ main: "find local ip adress" }).perform((argv) => cmd("ifconfig | grep inet", true));
 
 new ucmd("network")
   .describer({
-    main: "display live network"
+    main: "display live network",
     // options: [{ arg: "m", describe: "monitor network status", boolean: true }]
   })
-  .perform(argv => {
+  .perform((argv) => {
     // if (argv.m)
     return cmd("sudo nethogs -s");
   });
@@ -39,9 +39,9 @@ new ucmd("network")
 new ucmd("targz", "path")
   .describer({
     main: "typical tar command",
-    options: [{ arg: "p", describe: "path" }]
+    options: [{ arg: "p", describe: "path" }],
   })
-  .perform(argv => {
+  .perform((argv) => {
     let target = argv._[1] ? argv._[1] : argv.p;
     console.log("optional run ./configure & make & sudo make install afterwards");
     let command = `tar -xf ${target}`;
@@ -51,9 +51,9 @@ new ucmd("targz", "path")
 new ucmd("open", "location")
   .describer({
     main: "open the file or location",
-    options: [{ arg: "l", describe: "location", default: "." }]
+    options: [{ arg: "l", describe: "location", default: "." }],
   })
-  .perform(argv => {
+  .perform((argv) => {
     if (process.platform == "darwin") cmd(`open ${argv.l}`);
     if (process.platform == "linux") cmd(`xdg-open ${argv.l}`);
   });
@@ -63,10 +63,10 @@ new ucmd("download", "url", "filename")
     main: "download the file into ~/Download folder",
     options: [
       { arg: "u", describe: "url or m3u8" },
-      { arg: "f", describe: "filename or location" }
-    ]
+      { arg: "f", describe: "filename or location" },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
     let filename = argv.f;
     if (!/^[~!]|^(.\/)/.test(filename)) filename = os.homedir + "/Downloads/" + filename;
     let url = argv.u;
@@ -85,10 +85,10 @@ new ucmd("quick", "name", "cmd")
       { arg: "c", describe: "command to record" },
       { arg: "a", describe: "append command to end of line" },
       { arg: "d", describe: "display the command", boolean: true },
-      { arg: "r", describe: "remove file with name" }
-    ]
+      { arg: "r", describe: "remove file with name" },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
     if (argv.d) return recorder.display();
     if (argv.c) return recorder.record(argv.n, argv.c);
     if (argv.n) {
@@ -106,10 +106,10 @@ new ucmd("search", "target", "basedir")
       { arg: "b", describe: "base directory of the file" },
       { arg: "d", describe: "directory only", boolean: true },
       { arg: "f", describe: "file only", boolean: true },
-      { arg: "s", describe: "subdirectory depth", default: 2 }
-    ]
+      { arg: "s", describe: "subdirectory depth", default: 2 },
+    ],
   })
-  .perform(async argv => {
+  .perform(async (argv) => {
     if (!argv.b) argv.b = process.cwd();
     let target = argv.t;
     let basedir = argv.b;
@@ -130,15 +130,19 @@ new ucmd("search", "target", "basedir")
 new ucmd("sysinfo")
   .describer({
     main: "display system information",
-    options: [{ arg: "d", describe: "disk information", boolean: true }]
+    options: [
+      { arg: "f", describe: "file name of information", boolean: true },
+      { arg: "d", describe: "disk information", boolean: true },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
+    if (argv.f) return cmd("ls -alF");
     if (argv.d) return cmd("df -h");
     console.log({
       hostname: os.hostname(),
       platform: os.platform(),
       arch: os.arch(),
-      username: os.userInfo().username
+      username: os.userInfo().username,
     });
     cmd("lsb_release -a");
   });
@@ -150,10 +154,10 @@ new ucmd("ssh", "address", "username")
       { arg: "a", describe: "address" },
       { arg: "u", describe: "username of the host", default: os.userInfo().username },
       { arg: "n", describe: "name of alias" },
-      { arg: "r", describe: "refresh keygen token", boolean: true }
-    ]
+      { arg: "r", describe: "refresh keygen token", boolean: true },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
     let keygen = "ssh-keygen -t rsa -b 4096";
     if (argv.r) cmd(keygen);
     cmd(`if ! [ -f $HOME/.ssh/id_rsa ]; then ${keygen}; fi;`);
@@ -169,10 +173,10 @@ new ucmd("gitclone", "name", "user")
     options: [
       { arg: "n", describe: "name of the project" },
       { arg: "u", describe: "username", default: "Truth1984" },
-      { arg: "d", describe: "destination of download" }
-    ]
+      { arg: "d", describe: "destination of download" },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
     let user = argv.u;
     let project = argv.n;
     let dest = argv.d ? argv.d : `~/Documents/${project}`;
@@ -189,10 +193,10 @@ new ucmd("addPath", "name", "value")
       { arg: "e", describe: "environmental variable as $", boolean: true },
       { arg: "p", describe: "PATH variable, typical sbin", boolean: true },
       { arg: "d", describe: "display bash_mine", boolean: true },
-      { arg: "o", describe: "modify the file", boolean: true }
-    ]
+      { arg: "o", describe: "modify the file", boolean: true },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
     let target = `>> ~/.bash_mine`;
     if (argv.o) return cmd("nano ~/.bash_mine");
     if (!(argv.a || argv.e || argv.p || argv.d)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
@@ -207,9 +211,9 @@ new ucmd("addPath", "name", "value")
 new ucmd("unlock", "path")
   .describer({
     main: "check which process is using the lock",
-    options: [{ arg: "p", describe: "path of the locked file" }]
+    options: [{ arg: "p", describe: "path of the locked file" }],
   })
-  .perform(argv => cmd("sudo fuser -v " + argv.p));
+  .perform((argv) => cmd("sudo fuser -v " + argv.p));
 
 new ucmd("docker")
   .describer({
@@ -219,10 +223,10 @@ new ucmd("docker")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
-      { arg: "n", describe: "network status" }
-    ]
+      { arg: "n", describe: "network status" },
+    ],
   })
-  .perform(argv => {
+  .perform((argv) => {
     if (argv.c) cmd("sudo docker system prune");
     if (argv.i) cmd("sudo docker images" + (argv.a ? " -a" : ""));
     if (argv.p) cmd("sudo docker ps" + (argv.a ? " -a" : ""));
