@@ -6,6 +6,7 @@ module.exports = (scripts, log) => {
   return spawnSync(cmdarray.shift(), cmdarray, {
     shell: true,
     stdio: "inherit",
-    encoding: "utf-8"
+    encoding: "utf-8",
+    env: process.env,
   });
 };
