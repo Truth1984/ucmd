@@ -2,6 +2,7 @@
 
 var ucmd = require("../helper/_helper");
 var cmd = require("../helper/_cmd");
+var cmdq = require("../helper/_cmdQs");
 var download = require("../helper/downloader");
 var recorder = require("../helper/quickRecord");
 var os = require("os");
@@ -9,6 +10,7 @@ var fs = require("fs");
 var read = require("readdirp");
 var paths = require("path");
 let random = () => Math.floor(Math.random() * 10000).toString();
+require("./test");
 
 new ucmd("port", "portnum")
   .describer({
@@ -236,6 +238,12 @@ new ucmd("service")
     return cmd("service --status-all");
   });
 
+new ucmd("hash", "target")
+  .describer({ main: "hash the following string", options: [{ arg: "s", describe: "string of target" }] })
+  .perform((argv) => {
+    if (argv.s) return cmd(`echo -n ${argv.s} | md5sum`);
+  });
+
 new ucmd("docker")
   .describer({
     main: "docker additional command",
@@ -245,12 +253,14 @@ new ucmd("docker")
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
       { arg: "n", describe: "network status" },
+      { arg: "r", describe: "stop container and remove corresponding volume" },
     ],
   })
   .perform((argv) => {
-    if (argv.c) cmd("sudo docker system prune");
+    if (argv.c) cmd("sudo docker system prune --volumes");
     if (argv.i) cmd("sudo docker images" + (argv.a ? " -a" : ""));
     if (argv.p) cmd("sudo docker ps" + (argv.a ? " -a" : ""));
+    if (argv.r) cmd(`sudo docker container stop ${argv.r} && sudo docker container rm ${argv.r}`);
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
 
