@@ -220,6 +220,22 @@ new ucmd("unlock", "path")
   })
   .perform((argv) => cmd("sudo fuser -v " + argv.p));
 
+new ucmd("service")
+  .describer({
+    main: "list all the service",
+    options: [
+      { arg: "n", describe: "name of the service, check stauts" },
+      { arg: "a", describe: "active process", boolean: true },
+      { arg: "i", describe: "inactive process", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.n) return cmd(`service ${argv.n} status`);
+    if (argv.a) return cmd("service --status-all | grep '\\s+'");
+    if (argv.i) return cmd("service --status-all | grep '\\s-'");
+    return cmd("service --status-all");
+  });
+
 new ucmd("docker")
   .describer({
     main: "docker additional command",
