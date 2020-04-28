@@ -252,6 +252,8 @@ new ucmd("docker")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
+      { arg: "s", describe: "stop" },
+      { arg: "l", describe: "logs" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "stop container and remove corresponding volume" },
     ],
@@ -261,7 +263,25 @@ new ucmd("docker")
     if (argv.i) cmd("sudo docker images" + (argv.a ? " -a" : ""));
     if (argv.p) cmd("sudo docker ps" + (argv.a ? " -a" : ""));
     if (argv.r) cmd(`sudo docker container stop ${argv.r} && sudo docker container rm ${argv.r}`);
+    if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
+    if (argv.l) cmd(`sudo docker logs ${argv.l}`);
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
+  });
+
+new ucmd("helper")
+  .describer({
+    main: "helper for other commands",
+    options: [{ arg: "n", describe: "name" }],
+  })
+  .perform((argv) => {
+    let list = {
+      screen: {
+        "run in detached mode": "screen -dmS $name $cmd",
+        "kill session": "ctrl + a + k",
+      },
+    };
+    if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
+    else console.log(JSON.stringify(list, undefined, "\t"));
   });
 
 new ucmd().run();
