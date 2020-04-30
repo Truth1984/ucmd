@@ -279,6 +279,12 @@ new ucmd("helper")
         "run in detached mode": "screen -dmS $name $cmd",
         "kill session": "ctrl + a + k",
       },
+      git: {
+        "branch create": "git branch $name",
+        "branch ls": "git branch",
+        "branch remove": "git branch -d $name",
+        "graph adog": "git log --all --decorate --oneline --graph",
+      },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
     else console.log(JSON.stringify(list, undefined, "\t"));
