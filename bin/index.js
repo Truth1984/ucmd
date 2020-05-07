@@ -174,6 +174,16 @@ new ucmd("ssh", "address", "username")
     if (argv.n) cmd(`u quick ssh${argv.n} "ssh ${finalAddress}"`);
   });
 
+new ucmd("process", "name")
+  .describer({
+    main: "show list of current process",
+    options: [{ arg: "n", describe: "name to grep" }],
+  })
+  .perform((argv) => {
+    if (!argv.n) return cmd("ps -aux");
+    return cmd("ps -aux | grep " + argv.n);
+  });
+
 new ucmd("gitclone", "name", "user")
   .describer({
     main: "git clone into current folder",
@@ -271,9 +281,13 @@ new ucmd("docker")
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
-    options: [{ arg: "n", describe: "name" }],
+    options: [
+      { arg: "n", describe: "name" },
+      { arg: "e", describe: "edit with code", boolean: true },
+    ],
   })
   .perform((argv) => {
+    if (argv.e) return cmd("code ~/Documents/ucmd");
     let list = {
       screen: {
         "run in detached mode": "screen -dmS $name $cmd",
@@ -284,6 +298,15 @@ new ucmd("helper")
         "branch ls": "git branch",
         "branch remove": "git branch -d $name",
         "graph adog": "git log --all --decorate --oneline --graph",
+        "pull on target directory": "git -C $location pull",
+      },
+      crontab: {
+        edit: "crontab -e",
+        "run command on reboot": "@reboot CMD",
+        "At every 5th minute": "*/5 * * * *",
+        order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
+        output: "location: /var/log/syslog",
+        "listen on git project": '@reboot watch -n 10 "git -C $location pull origin $branchName"',
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
