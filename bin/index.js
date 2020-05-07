@@ -127,7 +127,7 @@ new ucmd("search", "target", "basedir")
     let nameArr = await read.promise(basedir, { type: "files_directories", depth });
 
     if (!directoryOnly && !fileOnly) {
-      for (let i of nameArr) if (i.basename.indexOf(target)) console.log(i);
+      for (let i of nameArr) if (i.basename.indexOf(target) > -1) console.log(i);
     } else {
       for (let i of nameArr)
         if (i.basename.indexOf(target) > -1 && (i.dirent.isDirectory() ? directoryOnly : fileOnly)) console.log(i);
@@ -292,6 +292,7 @@ new ucmd("helper")
       screen: {
         "run in detached mode": "screen -dmS $name $cmd",
         "kill session": "ctrl + a + k",
+        "show list of screens": "ls -laR /var/run/screen/",
       },
       git: {
         "branch create": "git branch $name",
@@ -304,9 +305,10 @@ new ucmd("helper")
         edit: "crontab -e",
         "run command on reboot": "@reboot CMD",
         "At every 5th minute": "*/5 * * * *",
+        "day 1, 3, 4, 5": "0 0 1,3-5 * *",
         order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
         output: "location: /var/log/syslog",
-        "listen on git project": '@reboot watch -n 10 "git -C $location pull origin $branchName"',
+        "listen on git project": '@reboot screen -dmS $name watch -n 10 "git -C $location pull origin $branchName"',
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
