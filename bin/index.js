@@ -259,7 +259,7 @@ new ucmd("unlock", "path")
   })
   .perform((argv) => cmd("sudo fuser -v " + argv.p));
 
-new ucmd("service")
+new ucmd("service", "name")
   .describer({
     main: "list all the service",
     options: [
@@ -335,10 +335,9 @@ new ucmd("helper")
         "day 1, 3, 4, 5": "0 0 1,3-5 * *",
         order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
         output: "location: /var/log/syslog",
-        "listen on git project": '@reboot screen -dmS $name watch -n 10 "git -C $location pull origin $branchName"',
       },
       grep: {
-        or: "pattern1|pattern2",
+        or: "pattern1\\|pattern2",
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
