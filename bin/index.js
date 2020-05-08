@@ -53,9 +53,13 @@ new ucmd("targz", "path")
 new ucmd("open", "location")
   .describer({
     main: "open the file or location",
-    options: [{ arg: "l", describe: "location", default: "." }],
+    options: [
+      { arg: "l", describe: "location", default: "." },
+      { arg: "d", describe: "~/Documents relative path" },
+    ],
   })
   .perform((argv) => {
+    if (argv.d) argv.l = "~/Documents/" + argv.l;
     if (process.platform == "darwin") cmd(`open ${argv.l}`);
     if (process.platform == "linux") cmd(`xdg-open ${argv.l}`);
   });
@@ -200,6 +204,29 @@ new ucmd("gitclone", "name", "user")
     cmd(`git clone https://github.com/${user}/${project}.git ${dest}`);
   });
 
+new ucmd("gitwatch", "location", "branchName", "interval")
+  .describer({
+    main: "watch file changes, auto pull every X seconds",
+    options: [
+      { arg: "l", describe: "project full location" },
+      { arg: "b", describe: "target branch", default: "master" },
+      { arg: "i", describe: "watch interval", default: 30 },
+    ],
+  })
+  .perform((argv) => {
+    if (!argv.l) return console.log("location not specified");
+    argv.l = argv.l.replace("~", process.env.HOME);
+    let stored = process.env.HOME + "/.application/cronfile";
+    let content = cmd("crontab -l ", false, true);
+    let screenName = "gitwatch_" + paths.basename(argv.l);
+    if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist");
+    fs.writeFileSync(
+      stored,
+      content + `\n@reboot screen -dmS ${screenName} watch -n ${argv.i} "git -C ${argv.l} pull origin ${argv.b}"\n`
+    );
+    cmd("crontab " + stored);
+  });
+
 new ucmd("addPath", "name", "value")
   .describer({
     main: "add path variable to ~/.bash_mine",
@@ -309,6 +336,9 @@ new ucmd("helper")
         order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
         output: "location: /var/log/syslog",
         "listen on git project": '@reboot screen -dmS $name watch -n 10 "git -C $location pull origin $branchName"',
+      },
+      grep: {
+        or: "pattern1|pattern2",
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));

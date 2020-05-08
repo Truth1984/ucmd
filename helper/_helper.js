@@ -17,21 +17,21 @@ module.exports = class ucmd {
     this._result = [
       this.main,
       description.main,
-      args => {
+      (args) => {
         if (Array.isArray(description.options))
           for (let i in description.options) {
             if (description.options[i].boolean) {
               delete description.options[i]["boolean"];
               description.options[i].type = "boolean";
             }
-            args.positional(description.options[i].arg, description.options[i]).check(argv => {
+            args.positional(description.options[i].arg, description.options[i]).check((argv) => {
               if (argv._[Number.parseInt(i) + 1] != undefined)
                 argv[description.options[i].arg] = argv._[Number.parseInt(i) + 1];
               return true;
             });
           }
         else args.positional(description.options.arg, description.options);
-      }
+      },
     ];
     return this;
   }
