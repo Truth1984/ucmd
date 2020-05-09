@@ -101,7 +101,7 @@ new ucmd("quick", "name", "cmd")
       let result = recorder.perform(argv.n);
       return result
         ? cmd(
-            argv.a ? (result.indexOf("..." > -1) ? result.replace("...", argv.a) : result + " " + argv.a) : result,
+            argv.a ? (result.indexOf("...") > -1 ? result.replace("...", argv.a) : result + " " + argv.a) : result,
             true
           )
         : "";
