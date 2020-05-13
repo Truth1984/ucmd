@@ -339,6 +339,19 @@ new ucmd("helper")
       grep: {
         or: "pattern1\\|pattern2",
       },
+      redis: {
+        "get all keys": "keys *",
+        "get expire time": "ttl KEY",
+      },
+      apt: {
+        "remove unnecessary ppa": "cd /etc/apt/sources.list.d",
+      },
+      network: {
+        "edit network config": "sudo nano /etc/network/interfaces",
+        "interfaces example":
+          "iface $name inet static:\n\tnetmask 255.255.255.0\n\tgateway 192.168.x.1\n\taddress 192.168.x.x",
+        "restart network": "sudo service network-manager restart",
+      },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
     else console.log(JSON.stringify(list, undefined, "\t"));
