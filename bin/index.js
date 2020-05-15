@@ -329,7 +329,7 @@ new ucmd("helper")
         "pull on target directory": "git -C $location pull",
       },
       crontab: {
-        edit: "crontab -e",
+        edit: "sudo crontab -e",
         "run command on reboot": "@reboot CMD",
         "At every 5th minute": "*/5 * * * *",
         "day 1, 3, 4, 5": "0 0 1,3-5 * *",
