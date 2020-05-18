@@ -305,6 +305,22 @@ new ucmd("docker")
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
 
+new ucmd("post", "url", "data")
+  .describer({
+    main: "send post request",
+    options: [
+      { arg: "u", describe: "url" },
+      { arg: "d", describe: "json data", default: "{}" },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.u.indexOf("http") < 0) argv.u = "http://" + argv.u;
+    return cmd(
+      `curl -X POST -H "Content-Type: application/json" -d '${JSON.stringify(eval("(" + argv.d + ")"))}' ${argv.u}`,
+      true
+    );
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
@@ -345,6 +361,7 @@ new ucmd("helper")
       },
       apt: {
         "remove unnecessary ppa": "cd /etc/apt/sources.list.d",
+        "list installed": "sudo apt list --installed",
       },
       network: {
         "edit network config": "sudo nano /etc/network/interfaces",
