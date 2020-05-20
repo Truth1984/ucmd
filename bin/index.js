@@ -344,6 +344,7 @@ new ucmd("helper")
         echo 'if [ "$PWD" = "$HOME" ]; then cd Documents; fi;' >> $HOME/.bash_mine
         echo 'PATH=$HOME/.npm_global/bin/:$PATH' >> $HOME/.bash_mine
         npm config set prefix $HOME/.npm_global
+        source $HOME/.bashrc
     
         git config --global alias.adog "log --all --decorate --oneline --graph"
     fi`,
