@@ -155,7 +155,7 @@ new ucmd("sysinfo")
       arch: os.arch(),
       username: os.userInfo().username,
     });
-    cmd("lsb_release -a");
+    cmd("cat /etc/os-release");
   });
 
 new ucmd("ssh", "address", "username")
@@ -327,10 +327,17 @@ new ucmd("helper")
     options: [
       { arg: "n", describe: "name" },
       { arg: "e", describe: "edit with code", boolean: true },
+      { arg: "s", describe: "software needs to be preinstalled" },
     ],
   })
   .perform((argv) => {
     if (argv.e) return cmd("code ~/Documents/ucmd");
+    if (argv.s)
+      return console.log({
+        yum: "epel-release ",
+        common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl",
+        optional: "docker",
+      });
     let list = {
       screen: {
         "run in detached mode": "screen -dmS $name $cmd",
