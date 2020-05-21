@@ -219,12 +219,13 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     let stored = process.env.HOME + "/.application/cronfile";
     let content = cmd("crontab -l ", false, true);
     let screenName = "gitwatch_" + paths.basename(argv.l);
-    let scriptLocation = process.env.HOME + "/.application/" + paths.basename(argv.l) + ".sh";
-    if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist");
+    let scriptLocation = process.env.HOME + "/.application/gitwatch_" + paths.basename(argv.l) + ".sh";
+    if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist, modify by using crontab -e");
 
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
-    let scriptContent = `var=$(git -C ${argv.l} pull origin ${argv.b})
-if echo $var | grep -q "error" || echo $var | grep -q "Already up-to-date"; then
+    let scriptContent = `cd ${argv.l}
+var=$(git pull origin ${argv.b})
+if echo $var | grep -q "done" || echo $var | grep -q "Already up-to-date"; then
     echo $var
 fi`;
     fs.writeFileSync(scriptLocation, scriptContent);
@@ -233,6 +234,7 @@ fi`;
       content + `\n@reboot screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}" \n`
     );
     cmd("crontab " + stored);
+    console.log("further modify:", scriptLocation);
   });
 
 new ucmd("addPath", "name", "value")
