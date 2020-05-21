@@ -219,10 +219,18 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     let stored = process.env.HOME + "/.application/cronfile";
     let content = cmd("crontab -l ", false, true);
     let screenName = "gitwatch_" + paths.basename(argv.l);
+    let scriptLocation = process.env.HOME + "/.application/" + paths.basename(argv.l) + ".sh";
     if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist");
+
+    cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
+    let scriptContent = `var=$(git -C ${argv.l} pull origin ${argv.b})
+if echo $var | grep -q "error" || echo $var | grep -q "Already up-to-date"; then
+    echo $var
+fi`;
+    fs.writeFileSync(scriptLocation, scriptContent);
     fs.writeFileSync(
       stored,
-      content + `\n@reboot screen -dmS ${screenName} watch -n ${argv.i} "git -C ${argv.l} pull origin ${argv.b}"\n`
+      content + `\n@reboot screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}" \n`
     );
     cmd("crontab " + stored);
   });
@@ -340,6 +348,7 @@ new ucmd("helper")
         prescript: `if ! [ -f "$HOME/.bash_mine" ]; then
         touch $HOME/.bash_mine
         mkdir $HOME/.npm_global
+        mkdir $HOME/.application
         echo 'source $HOME/.bash_mine' >> $HOME/.bashrc
         echo 'if [ "$PWD" = "$HOME" ]; then cd Documents; fi;' >> $HOME/.bash_mine
         echo 'PATH=$HOME/.npm_global/bin/:$PATH' >> $HOME/.bash_mine
