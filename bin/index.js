@@ -418,6 +418,10 @@ new ucmd("helper")
           "iface $name inet static:\n\tnetmask 255.255.255.0\n\tgateway 192.168.x.1\n\taddress 192.168.x.x",
         "restart network": "sudo service network-manager restart",
       },
+      scp: {
+        download: "scp user@remote_host:remote_file local_file",
+        upload: "scp local_file user@remote_host:remote_file",
+      },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
     else console.log(JSON.stringify(list, undefined, "\t"));
