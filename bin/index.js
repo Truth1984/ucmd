@@ -28,13 +28,17 @@ new ucmd("port", "portnum")
 
 new ucmd("ip").describer({ main: "find local ip adress" }).perform((argv) => cmd("ifconfig | grep inet", true));
 
-new ucmd("network")
+new ucmd("network", "device")
   .describer({
     main: "display live network",
-    // options: [{ arg: "m", describe: "monitor network status", boolean: true }]
+    options: [
+      { arg: "d", describe: "device for showing network details" },
+      { arg: "l", describe: "list the network", boolean: true },
+    ],
   })
   .perform((argv) => {
-    // if (argv.m)
+    if (argv.l) return cmd("sudo netstat -i");
+    if (argv.d) return cmd("sudo nethogs " + argv.d);
     return cmd("sudo nethogs -s");
   });
 
@@ -364,8 +368,9 @@ new ucmd("helper")
     if (argv.e) return cmd("code ~/Documents/ucmd");
     if (argv.s)
       return console.log({
-        yum: "epel-release ",
-        common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl",
+        yum: "epel-release",
+        ubuntu: "",
+        common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl ",
         optional: "docker",
         prescript: `if ! [ -f "$HOME/.bash_mine" ]; then
         touch $HOME/.bash_mine
