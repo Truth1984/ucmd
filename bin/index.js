@@ -278,15 +278,42 @@ new ucmd("service", "name")
     main: "list all the service",
     options: [
       { arg: "n", describe: "name of the service, check stauts" },
+      { arg: "e", describe: "enable a service" },
+      { arg: "d", describe: "disable a service" },
       { arg: "a", describe: "active process", boolean: true },
       { arg: "i", describe: "inactive process", boolean: true },
     ],
   })
   .perform((argv) => {
-    if (argv.n) return cmd(`service ${argv.n} status`);
-    if (argv.a) return cmd("service --status-all | grep '\\s+'");
-    if (argv.i) return cmd("service --status-all | grep '\\s-'");
-    return cmd("service --status-all");
+    let services = cmd(`service --status-all`, false, true).split("\n");
+
+    let fuzzy = (name) => {
+      let target = services.filter((item) => item.indexOf(name) > -1).map((i) => i.replace(/\[.+\]/, "").trim());
+      if (target.length > 1) console.log("fuzzy: multiple target found", target);
+      return target;
+    };
+
+    if (argv.a) return console.log(services.filter((item) => item.indexOf("[ + ]") > -1));
+    if (argv.i) return console.log(services.filter((item) => item.indexOf("[ - ]") > -1));
+    if (argv.n) return cmd(`service ${fuzzy(argv.n)[0]} status`);
+
+    if (argv.e) {
+      let target = fuzzy(argv.e)[0];
+      return cmdq({ ["enable service: " + target + "(y/N)"]: false }).then((ans) => {
+        if (ans[0] === "y") cmd("sudo systemctl enable " + target);
+        cmd(`service ${target} status`);
+      });
+    }
+
+    if (argv.d) {
+      let target = fuzzy(argv.d)[0];
+      return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
+        if (ans[0] === "y") cmd("sudo systemctl disable " + target, true);
+        cmd(`service ${target} status`);
+      });
+    }
+
+    cmd(`service --status-all`);
   });
 
 new ucmd("hash", "target")
