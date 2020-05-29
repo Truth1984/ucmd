@@ -424,6 +424,7 @@ new ucmd("helper")
         "branch remove": "git branch -d $name",
         "graph adog": "git log --all --decorate --oneline --graph",
         "pull on target directory": "git -C $location pull",
+        "first time config": "git config --global user.name $name && git config --global user.email $email",
       },
       crontab: {
         edit: "sudo crontab -e",
