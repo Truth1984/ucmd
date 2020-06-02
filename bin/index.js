@@ -63,7 +63,7 @@ new ucmd("open", "location")
     ],
   })
   .perform((argv) => {
-    if (argv.d) argv.l = "~/Documents/" + argv.l;
+    if (argv.d) argv.l = paths.join("~/Documents/", argv.l);
     if (process.platform == "darwin") cmd(`open ${argv.l}`);
     if (process.platform == "linux") cmd(`xdg-open ${argv.l}`);
   });
@@ -399,6 +399,17 @@ new ucmd("helper")
         ubuntu: "",
         common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl ",
         optional: "docker",
+        yumDocker:
+          "sudo yum remove docker \
+        docker-client \
+        docker-client-latest \
+        docker-common \
+        docker-latest \
+        docker-latest-logrotate \
+        docker-logrotate \
+        docker-engine && sudo yum install -y yum-utils && sudo yum-config-manager \
+        --add-repo \
+        https://download.docker.com/linux/centos/docker-ce.repo && sudo yum install docker-ce docker-ce-cli containerd.io",
         prescript: `if ! [ -f "$HOME/.bash_mine" ]; then
         touch $HOME/.bash_mine
         mkdir $HOME/.npm_global
@@ -438,6 +449,7 @@ new ucmd("helper")
         or: "pattern1\\|pattern2",
       },
       redis: {
+        authorization: "AUTH $pass",
         "get all keys": "keys *",
         "get expire time": "ttl KEY",
       },
