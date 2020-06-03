@@ -185,11 +185,16 @@ new ucmd("ssh", "address", "username")
 new ucmd("process", "name")
   .describer({
     main: "show list of current process",
-    options: [{ arg: "n", describe: "name to grep" }],
+    options: [
+      { arg: "n", describe: "name to grep" },
+      { arg: "f", describe: "full command display", boolean: true },
+    ],
   })
   .perform((argv) => {
-    if (!argv.n) return cmd("ps -aux");
-    return cmd("ps -aux | grep " + argv.n);
+    let base = "ps -aux";
+    if (argv.f) base += "wwf";
+    if (!argv.n) return cmd(base);
+    return cmd(base + " | grep " + argv.n);
   });
 
 new ucmd("gitclone", "name", "user")
