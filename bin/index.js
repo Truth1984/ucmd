@@ -119,6 +119,7 @@ new ucmd("search", "target", "basedir")
     options: [
       { arg: "t", describe: "target filename" },
       { arg: "b", describe: "base directory of the file" },
+      { arg: "i", describe: "Ignore directory like ['!.git'], Include like ['*.js']", default: [] },
       { arg: "d", describe: "directory only", boolean: true },
       { arg: "f", describe: "file only", boolean: true },
       { arg: "s", describe: "subdirectory depth", default: 2 },
@@ -128,11 +129,12 @@ new ucmd("search", "target", "basedir")
     if (!argv.b) argv.b = process.cwd();
     let target = argv.t;
     let basedir = argv.b;
+    let ignores = argv.i;
     let directoryOnly = argv.d;
     let fileOnly = argv.f;
     let depth = argv.s;
 
-    let nameArr = await read.promise(basedir, { type: "files_directories", depth });
+    let nameArr = await read.promise(basedir, { type: "files_directories", depth, fileFilter: ignores });
 
     if (!directoryOnly && !fileOnly) {
       for (let i of nameArr) if (i.basename.indexOf(target) > -1) console.log(i);
@@ -279,6 +281,19 @@ new ucmd("unlock", "path")
     options: [{ arg: "p", describe: "path of the locked file" }],
   })
   .perform((argv) => cmd("sudo fuser -v " + argv.p));
+
+new ucmd("lock", "file")
+  .describer({
+    main: "prevent file from overwritten",
+    options: [
+      { arg: "f", describe: "filename to lock" },
+      { arg: "u", describe: "unlock file" },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.f) return cmd("sudo chattr +i " + argv.f);
+    if (argv.u) return cmd("sudo chattr -i " + argv.u);
+  });
 
 new ucmd("service", "name")
   .describer({
