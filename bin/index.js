@@ -352,6 +352,7 @@ new ucmd("docker")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
+      { arg: "o", describe: "docker find port" },
       { arg: "s", describe: "stop" },
       { arg: "l", describe: "logs" },
       { arg: "n", describe: "network status" },
@@ -362,6 +363,7 @@ new ucmd("docker")
     if (argv.c) cmd("sudo docker system prune --volumes");
     if (argv.i) cmd("sudo docker images" + (argv.a ? " -a" : ""));
     if (argv.p) cmd("sudo docker ps" + (argv.a ? " -a" : ""));
+    if (argv.p) cmd("sudo docker ps | grep " + argv.p);
     if (argv.r) cmd(`sudo docker container stop ${argv.r} && sudo docker container rm ${argv.r}`);
     if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
     if (argv.l) cmd(`sudo docker logs ${argv.l}`);
