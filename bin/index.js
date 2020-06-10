@@ -74,11 +74,12 @@ new ucmd("download", "url", "filename")
     options: [
       { arg: "u", describe: "url or m3u8" },
       { arg: "f", describe: "filename or location" },
+      { arg: "a", describe: "absolute, else it will be in ~/Downloads folder", boolean: true },
     ],
   })
   .perform((argv) => {
     let filename = argv.f;
-    if (!/^[~!]|^(.\/)/.test(filename)) filename = os.homedir + "/Downloads/" + filename;
+    if (!argv.a) filename = os.homedir + "/Downloads/" + filename;
     let url = argv.u;
     if (/\.m3u8/.test(url)) {
       download.m3u8(url, filename);
