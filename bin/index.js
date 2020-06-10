@@ -229,11 +229,13 @@ new ucmd("gitwatch", "location", "branchName", "interval")
   })
   .perform((argv) => {
     if (!argv.l) return console.log("location not specified");
+    cmd("mkdir -p " + process.env.HOME + "/.application/gitwatch");
+    cmd("mkdir -p " + process.env.HOME + "/.application/cron");
     argv.l = argv.l.replace("~", process.env.HOME);
-    let stored = process.env.HOME + "/.application/cronfile";
+    let stored = process.env.HOME + "/.application/cron/cronfile";
     let content = cmd("crontab -l ", false, true);
     let screenName = "gitwatch_" + paths.basename(argv.l);
-    let scriptLocation = process.env.HOME + "/.application/gitwatch_" + paths.basename(argv.l) + ".sh";
+    let scriptLocation = process.env.HOME + "/.application/gitwatch/gitwatch_" + paths.basename(argv.l) + ".sh";
     if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist, modify by using crontab -e");
 
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
