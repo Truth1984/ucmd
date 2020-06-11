@@ -255,18 +255,16 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
     let scriptContent = `cd ${argv.l}
 var=$(git pull origin ${argv.b} 2>&1)
-if echo $var | grep -q "done"; then
+if echo $var | grep -q "changed"; then
     echo $(date) >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
     echo $var >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
 fi;
-if echo $var | grep -q "Already up-to-date"; then
-    echo $var
-fi`;
+echo $var
+`;
+    let screencmd = `screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}`;
     fs.writeFileSync(scriptLocation, scriptContent);
-    fs.writeFileSync(
-      stored,
-      content + `\n@reboot screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}" \n`
-    );
+    fs.writeFileSync(stored, content + `\n@reboot ${screencmd}" \n`);
+    cmd(screencmd);
     cmd("crontab " + stored);
     console.log("further modify:", scriptLocation);
   });
