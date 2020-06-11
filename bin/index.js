@@ -254,7 +254,7 @@ new ucmd("gitwatch", "location", "branchName", "interval")
 
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
     let scriptContent = `cd ${argv.l}
-var=$(git pull origin ${argv.b} >| echo)
+var=$(git pull origin ${argv.b} 2>&1)
 if echo $var | grep -q "done"; then
     echo $(date) >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
     echo $var >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
@@ -327,7 +327,7 @@ new ucmd("saveop", "cmd", "fileLocation")
     ],
   })
   .perform((argv) => {
-    if (argv.c) return cmd(`${argv.c} >| echo ${argv.a ? ">>" : ">"} ${argv.f}`);
+    if (argv.c) return cmd(`${argv.c} 2>&1 | tee ${argv.a ? "-a" : ""} ${argv.f}`);
     if (argv.e) return cmd(`cat ${argv.f}`);
   });
 
