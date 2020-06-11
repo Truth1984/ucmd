@@ -259,11 +259,11 @@ if echo $var | grep -q "changed"; then
     echo $(date) >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
     echo $var >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
 fi;
-echo $var
+echo $var;
 `;
-    let screencmd = `screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}`;
+    let screencmd = `screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}"`;
     fs.writeFileSync(scriptLocation, scriptContent);
-    fs.writeFileSync(stored, content + `\n@reboot ${screencmd}" \n`);
+    fs.writeFileSync(stored, content + `\n@reboot ${screencmd} \n`);
     cmd(screencmd);
     cmd("crontab " + stored);
     console.log("further modify:", scriptLocation);
