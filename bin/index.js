@@ -298,6 +298,21 @@ new ucmd("lock", "file")
     if (argv.u) return cmd("sudo chattr -i " + argv.u);
   });
 
+new ucmd("saveop", "cmd", "fileLocation")
+  .describer({
+    main: "save the out put of a command to the file",
+    options: [
+      { arg: "c", describe: "command to save the output" },
+      { arg: "f", describe: "file for saving the output", default: "~/.application/saveoptmp.log" },
+      { arg: "a", describe: "appendable", boolean: true },
+      { arg: "e", describe: "echo result from saveoptmp.log", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.c) return cmd(`${argv.c} >| echo ${argv.a ? ">>" : ">"} ${argv.f}`);
+    if (argv.e) return cmd(`cat ${argv.f}`);
+  });
+
 new ucmd("service", "name")
   .describer({
     main: "list all the service",
