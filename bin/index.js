@@ -225,10 +225,12 @@ new ucmd("gitwatch", "location", "branchName", "interval")
       { arg: "l", describe: "project full location" },
       { arg: "b", describe: "target branch", default: "master" },
       { arg: "i", describe: "watch interval", default: 30 },
+      { arg: "r", describe: "remove gitwatch config", boolean: true },
     ],
   })
   .perform((argv) => {
     if (!argv.l) return console.log("location not specified");
+    cmd("mkdir -p " + process.env.HOME + "/.application/log");
     cmd("mkdir -p " + process.env.HOME + "/.application/gitwatch");
     cmd("mkdir -p " + process.env.HOME + "/.application/cron");
     argv.l = argv.l.replace("~", process.env.HOME);
@@ -236,12 +238,28 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     let content = cmd("crontab -l ", false, true);
     let screenName = "gitwatch_" + paths.basename(argv.l);
     let scriptLocation = process.env.HOME + "/.application/gitwatch/gitwatch_" + paths.basename(argv.l) + ".sh";
+
+    if (argv.r) {
+      cmd(`rm ${scriptLocation}`);
+      cmd(`screen -X -S ${screenName} quit`);
+      content = content
+        .split("\n")
+        .filter((c) => c.indexOf(scriptLocation) == -1)
+        .join("\n");
+      fs.writeFileSync(stored, content);
+      return cmd("crontab " + stored);
+    }
+
     if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist, modify by using crontab -e");
 
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
     let scriptContent = `cd ${argv.l}
-var=$(git pull origin ${argv.b})
-if echo $var | grep -q "done" || echo $var | grep -q "Already up-to-date"; then
+var=$(git pull origin ${argv.b} >| echo)
+if echo $var | grep -q "done"; then
+    echo echo $(date)
+    echo $var >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
+fi;
+if echo $var | grep -q "Already up-to-date"; then
     echo $var
 fi`;
     fs.writeFileSync(scriptLocation, scriptContent);
