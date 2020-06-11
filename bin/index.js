@@ -256,7 +256,7 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     let scriptContent = `cd ${argv.l}
 var=$(git pull origin ${argv.b} >| echo)
 if echo $var | grep -q "done"; then
-    echo echo $(date)
+    echo $(date) >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
     echo $var >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
 fi;
 if echo $var | grep -q "Already up-to-date"; then
