@@ -388,7 +388,7 @@ new ucmd("docker")
       { arg: "a", describe: "all display", boolean: true },
       { arg: "o", describe: "docker find port" },
       { arg: "s", describe: "stop" },
-      { arg: "l", describe: "logs" },
+      { arg: "l", describe: "logs path of container" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "stop container and remove corresponding volume" },
     ],
@@ -400,7 +400,7 @@ new ucmd("docker")
     if (argv.p) cmd("sudo docker ps | grep " + argv.p);
     if (argv.r) cmd(`sudo docker container stop ${argv.r} && sudo docker container rm ${argv.r}`);
     if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
-    if (argv.l) cmd(`sudo docker logs ${argv.l}`);
+    if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
 
