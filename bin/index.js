@@ -543,6 +543,9 @@ new ucmd("helper")
         "remove unnecessary ppa": "cd /etc/apt/sources.list.d",
         "list installed": "sudo apt list --installed",
       },
+      yum: {
+        "list installed": "yum list installed",
+      },
       network: {
         "edit network config": "sudo nano /etc/network/interfaces",
         "interfaces example":
