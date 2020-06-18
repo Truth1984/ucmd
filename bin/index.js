@@ -12,6 +12,11 @@ var paths = require("path");
 let random = () => Math.floor(Math.random() * 10000).toString();
 require("./test");
 
+let ost = () => {
+  if (fs.existsSync("/etc/debian_version")) return "apt";
+  if (fs.existsSync("/etc/redhat-release")) return "yum";
+};
+
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
@@ -389,6 +394,7 @@ new ucmd("docker")
       { arg: "o", describe: "docker find port" },
       { arg: "s", describe: "stop" },
       { arg: "l", describe: "logs path of container" },
+      { arg: "L", describe: "live log" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "stop container and remove corresponding volume" },
     ],
@@ -401,6 +407,7 @@ new ucmd("docker")
     if (argv.r) cmd(`sudo docker container stop ${argv.r} && sudo docker container rm ${argv.r}`);
     if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
+    if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
 
@@ -414,6 +421,8 @@ new ucmd("dc")
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
+      { arg: "L", describe: "live log" },
+      { arg: "l", describe: "logs service" },
     ],
   })
   .perform((argv) => {
@@ -422,6 +431,8 @@ new ucmd("dc")
     if (argv.i) return cmd("sudo docker-compose images");
     if (argv.p) return cmd("sudo docker-compose ps" + (argv.a ? " -a" : ""));
     if (argv.r) return cmd("sudo docker-compose rm -s");
+    if (argv.l) return cmd("sudo docker-compose logs " + argv.l);
+    if (argv.L) return cmd(`sudo docker-compose logs -f ${argv.L}`);
   });
 
 new ucmd("post", "url", "data")
