@@ -446,7 +446,9 @@ new ucmd("post", "url", "data")
   .perform((argv) => {
     if (argv.u.indexOf("http") < 0) argv.u = "http://" + argv.u;
     return cmd(
-      `curl -X POST -H "Content-Type: application/json" -d '${JSON.stringify(eval("(" + argv.d + ")"))}' ${argv.u}`,
+      `curl -X POST -A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Content-Type: application/json" -d '${JSON.stringify(
+        eval("(" + argv.d + ")")
+      )}' ${argv.u}`,
       true
     );
   });
