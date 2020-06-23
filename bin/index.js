@@ -421,8 +421,8 @@ new ucmd("dc")
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
-      { arg: "L", describe: "live log" },
-      { arg: "l", describe: "logs service" },
+      { arg: "L", describe: "live log", default: "" },
+      { arg: "l", describe: "logs service", default: "" },
     ],
   })
   .perform((argv) => {
@@ -495,6 +495,8 @@ new ucmd("helper")
         ubuntu: "",
         common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl ",
         optional: "docker",
+        yumDC:
+          'sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose',
         yumDocker:
           "sudo yum remove docker \
         docker-client \
