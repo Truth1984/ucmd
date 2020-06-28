@@ -445,12 +445,13 @@ new ucmd("post", "url", "data")
   })
   .perform((argv) => {
     if (argv.u.indexOf("http") < 0) argv.u = "http://" + argv.u;
-    return cmd(
+    cmd(
       `curl -X POST -A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Content-Type: application/json" -d '${JSON.stringify(
         eval("(" + argv.d + ")")
       )}' ${argv.u}`,
       true
     );
+    console.log("");
   });
 
 new ucmd("replace", "filename", "old", "new")
@@ -497,6 +498,10 @@ new ucmd("helper")
         ubuntu: "",
         common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl ",
         optional: "docker",
+        ubuntuDocker: `sudo add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) \
+        stable && sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io `,
         yumDC:
           'sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose',
         yumDocker:
