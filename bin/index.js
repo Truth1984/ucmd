@@ -473,8 +473,9 @@ new ucmd("iptable")
     options: [
       { arg: "p", describe: "process list", boolean: true },
       { arg: "s", describe: "save iptable backup" },
-      { arg: "b", describe: "block ip address" },
+      { arg: "b", describe: "block ip address, can be xxx.xxx.xxx.0/24" },
       { arg: "u", describe: "unblock ip address", boolean: true },
+      { arg: "S", describe: "secure setup for internet interface" },
     ],
   })
   .perform((argv) => {
@@ -489,6 +490,9 @@ new ucmd("iptable")
       );
     }
 
+    //block ssh
+    //sudo iptables -A INPUT -p tcp -s xxx.xxx.xxx.0/24 --dport 22 -j DROP
+
     if (argv.b)
       // -I INPUT to put rules at the beginning
       return cmd(
@@ -499,6 +503,16 @@ new ucmd("iptable")
       return cmd(
         `sudo iptables -D INPUT -p all -s ${argv.u} -j DROP && sudo iptables -D OUTPUT -p all -s ${argv.u} -j DROP`
       );
+
+    if (argv.S) {
+      if (argv.S == true) return console.log("internet interface not specified");
+      //portscan
+      return cmd(`sudo iptables -N LOGPSCAN
+      sudo iptables -A LOGPSCAN -p tcp --syn -m limit --limit 2000/hour -j RETURN
+      sudo iptables -A LOGPSCAN -m limit --limit 99/hour -j LOG --log-prefix "DROPPED Port scan: "
+      sudo iptables -A LOGPSCAN -j DROP
+      sudo iptables -A INPUT -p tcp --syn -j LOGPSCAN`);
+    }
   });
 
 new ucmd("replace", "filename", "old", "new")
