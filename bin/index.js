@@ -9,12 +9,25 @@ var os = require("os");
 var fs = require("fs");
 var read = require("readdirp");
 var paths = require("path");
+var mp = require("pollute");
 let random = () => Math.floor(Math.random() * 10000).toString();
 require("./test");
 
 let ost = () => {
   if (fs.existsSync("/etc/debian_version")) return "apt";
   if (fs.existsSync("/etc/redhat-release")) return "yum";
+};
+
+let getTime = () => {
+  let dobj = new Date();
+  return {
+    year: dobj.getFullYear(),
+    month: dobj.getMonth() + 1,
+    day: dobj.getDate(),
+    hour: dobj.getHours(),
+    minute: dobj.getMinutes(),
+    second: dobj.getSeconds(),
+  };
 };
 
 new ucmd("port", "portnum")
@@ -454,6 +467,40 @@ new ucmd("post", "url", "data")
     console.log("");
   });
 
+new ucmd("iptable")
+  .describer({
+    main: "iptable controller",
+    options: [
+      { arg: "p", describe: "process list", boolean: true },
+      { arg: "s", describe: "save iptable backup" },
+      { arg: "b", describe: "block ip address" },
+      { arg: "u", describe: "unblock ip address", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    // iptables is not quiet useful if all the connections have docker network proxy
+    if (argv.p) return cmd("sudo iptables -L -v");
+
+    if (argv.s) {
+      let ctime = getTime();
+      //sudo iptables-restore < /tmp/iptables_backup
+      return cmd(
+        `sudo iptables-save > /tmp/iptables_backup_${ctime.year}${ctime.month}${ctime.day}${ctime.hour}${ctime.minute}`
+      );
+    }
+
+    if (argv.b)
+      // -I INPUT to put rules at the beginning
+      return cmd(
+        `sudo iptables -A INPUT -p all -s ${argv.b} -j DROP && sudo iptables -A OUTPUT -p all -s ${argv.b} -j DROP`
+      );
+
+    if (argv.u)
+      return cmd(
+        `sudo iptables -D INPUT -p all -s ${argv.u} -j DROP && sudo iptables -D OUTPUT -p all -s ${argv.u} -j DROP`
+      );
+  });
+
 new ucmd("replace", "filename", "old", "new")
   .describer({
     main: "replace a string in the file",
@@ -477,7 +524,9 @@ new ucmd("replace", "filename", "old", "new")
       }
     }
     if (dlm == undefined) return console.log("delimiter can't be used");
-    let line = `sed ${argv.t ? "" : "-i"} 's${dlm}${argv.o}${dlm}${argv.n}${dlm}${argv.g ? dlm + "g" : ""}' ${argv.f}`;
+    let line = `sudo sed ${argv.t ? "" : "-i"} 's${dlm}${argv.o}${dlm}${argv.n}${dlm}${argv.g ? dlm + "g" : ""}' ${
+      argv.f
+    }`;
     cmd(line);
   });
 
@@ -575,6 +624,12 @@ new ucmd("helper")
       scp: {
         download: "scp user@remote_host:remote_file local_file",
         upload: "scp local_file user@remote_host:remote_file",
+      },
+      bash: {
+        scriptDir: 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"',
+        disableService: "systemctl disable $SERVICENAME",
+        grepRegex: `grep -P "\\d"`,
+        shEcho: "sh -c 'echo 0'",
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
