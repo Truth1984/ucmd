@@ -33,12 +33,20 @@ let getTime = () => {
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
-    options: [{ arg: "p", describe: "port number or process name" }],
+    options: [
+      { arg: "p", describe: "port number or process name" },
+      { arg: "d", describe: "docker container port" },
+    ],
   })
   .perform((argv) => {
     if (os.platform() == "win32") {
       if (!argv.p) return cmd("netstat -bn");
       return cmd("netstat -bn | grep " + argv.p);
+    }
+    //
+    if (argv.d) {
+      if (argv.d == true) return cmd(`sudo docker ps --format "{{.Ports}}\t:\t{{.Image}}"`);
+      else return cmd(`sudo docker ps | grep  ${argv.d}`);
     }
     if (!argv.p) return cmd("sudo netstat -plntu");
     return cmd("sudo netstat -lntup | grep " + argv.p);
