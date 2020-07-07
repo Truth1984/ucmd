@@ -11,12 +11,18 @@ var read = require("readdirp");
 var paths = require("path");
 var mp = require("pollute");
 var shellParser = require("../helper/shell-parser");
+var iniParser = require("ini");
 let random = () => Math.floor(Math.random() * 10000).toString();
 require("./test");
 
 let ost = () => {
   if (fs.existsSync("/etc/debian_version")) return "apt";
   if (fs.existsSync("/etc/redhat-release")) return "yum";
+};
+
+let parseJson = (string, tostring = true) => {
+  if (tostring) return JSON.stringify(eval("(" + string + ")"));
+  return eval("(" + string + ")");
 };
 
 let getTime = () => {
@@ -469,8 +475,8 @@ new ucmd("post", "url", "data")
   .perform((argv) => {
     if (argv.u.indexOf("http") < 0) argv.u = "http://" + argv.u;
     cmd(
-      `curl -X POST -A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Content-Type: application/json" -d '${JSON.stringify(
-        eval("(" + argv.d + ")")
+      `curl -X POST -A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Content-Type: application/json" -d '${parseJson(
+        argv.d
       )}' ${argv.u}`,
       true
     );
@@ -567,6 +573,40 @@ new ucmd("json", "cmd")
     console.log(shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l }));
   });
 
+new ucmd("backup", "file")
+  .describer({
+    main: "backup a file to normal backup folder",
+    options: [{ arg: "f", describe: "file location" }],
+  })
+  .perform((argv) => {
+    if (!fs.existsSync(argv.f)) return console.log("file not exist", argv.f);
+    let time = getTime();
+    let filename = paths.basename(argv.f) + [time.year, time.month, time.day, time.hour, time.minute].join("-");
+    return cmd(`cp ${argv.f} $UDATA/backup/${filename} && echo "${filename} > ${argv.f}" >> $UDATA/backup/readme.md`);
+  });
+
+new ucmd("ini", "file")
+  .describer({
+    main: "parse ini file to json and vice-versa",
+    options: [
+      { arg: "f", describe: "file location to workwith" },
+      { arg: "j", describe: "json data to merge with" },
+      { arg: "p", describe: "print json result", boolean: true },
+      { arg: "b", describe: "backup file", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    if (!fs.existsSync(argv.f)) return console.log("file not exist", argv.f);
+    if (argv.p) console.log(iniParser.parse(fs.readFileSync(argv.f).toString()));
+    if (argv.b) cmd(`u backup ${argv.f}`);
+    if (argv.j)
+      fs.writeFileSync(
+        argv.f,
+        iniParser.encode(Object.assign(iniParser.parse(fs.readFileSync(argv.f).toString()), parseJson(argv.j, false))),
+        { flag: "w+" }
+      );
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
@@ -604,7 +644,7 @@ new ucmd("helper")
         prescript: `if ! [ -f "$HOME/.bash_mine" ]; then
         touch $HOME/.bash_mine
         mkdir $HOME/.npm_global
-        mkdir $HOME/.application
+        mkdir -p $HOME/.application/backup
         echo 'source $HOME/.bash_mine' >> $HOME/.bashrc
         echo 'if [ "$PWD" = "$HOME" ]; then cd Documents; fi;' >> $HOME/.bash_mine
         echo 'function cdd { cd $1 && ls -a; }' >> $HOME/.bash_mine
@@ -668,6 +708,7 @@ new ucmd("helper")
         scriptDir: 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"',
         disableService: "systemctl disable $SERVICENAME",
         shEcho: "sh -c 'echo 0'",
+        mkdir: "mkdir -p",
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
