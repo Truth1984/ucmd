@@ -256,14 +256,14 @@ new ucmd("gitwatch", "location", "branchName", "interval")
   })
   .perform((argv) => {
     if (!argv.l) return console.log("location not specified");
-    cmd("mkdir -p " + process.env.HOME + "/.application/log");
-    cmd("mkdir -p " + process.env.HOME + "/.application/gitwatch");
-    cmd("mkdir -p " + process.env.HOME + "/.application/cron");
+    cmd("mkdir -p $UDATA/log");
+    cmd("mkdir -p $UDATA/gitwatch");
+    cmd("mkdir -p $UDATA/cron");
     argv.l = argv.l.replace("~", process.env.HOME);
-    let stored = process.env.HOME + "/.application/cron/cronfile";
+    let stored = "$UDATA/cron/cronfile";
     let content = cmd("crontab -l ", false, true);
     let screenName = "gitwatch_" + paths.basename(argv.l);
-    let scriptLocation = process.env.HOME + "/.application/gitwatch/gitwatch_" + paths.basename(argv.l) + ".sh";
+    let scriptLocation = "$UDATA/gitwatch/gitwatch_" + paths.basename(argv.l) + ".sh";
 
     if (argv.r) {
       cmd(`rm ${scriptLocation}`);
@@ -282,8 +282,8 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     let scriptContent = `cd ${argv.l}
 var=$(git pull origin ${argv.b} 2>&1)
 if echo $var | grep -q "changed"; then
-    echo $(date) >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
-    echo $var >> ${process.env.HOME + "/.application/log"}/gitwatch_${paths.basename(argv.l)}.log
+    echo $(date) >> $UDATA/log/gitwatch_${paths.basename(argv.l)}.log
+    echo $var >> $UDATA/log/gitwatch_${paths.basename(argv.l)}.log
 fi;
 echo $var;
 `;
@@ -345,12 +345,13 @@ new ucmd("saveop", "cmd", "fileLocation")
     main: "save the out put of a command to the file",
     options: [
       { arg: "c", describe: "command to save the output" },
-      { arg: "f", describe: "file for saving the output", default: "~/.application/saveoptmp.log" },
+      { arg: "f", describe: "file for saving the output", default: "$UDATA/u_saveop_tmp.log" },
       { arg: "a", describe: "appendable", boolean: true },
       { arg: "e", describe: "echo result from saveoptmp.log", boolean: true },
     ],
   })
   .perform((argv) => {
+    console.log(argv.f);
     if (argv.c) return cmd(`${argv.c} 2>&1 | tee ${argv.a ? "-a" : ""} ${argv.f}`);
     if (argv.e) return cmd(`cat ${argv.f}`);
   });
@@ -594,6 +595,7 @@ new ucmd("helper")
         echo 'if [ "$PWD" = "$HOME" ]; then cd Documents; fi;' >> $HOME/.bash_mine
         echo 'function cdd { cd $1 && ls -a; }' >> $HOME/.bash_mine
         echo 'PATH=$HOME/.npm_global/bin/:$PATH' >> $HOME/.bash_mine
+        echo 'UDATA=$HOME/.application' >> $HOME/.bash_mine
         npm config set prefix $HOME/.npm_global
         source $HOME/.bashrc
     
@@ -624,6 +626,7 @@ new ucmd("helper")
       },
       grep: {
         or: "pattern1\\|pattern2",
+        regex: `grep -P "\\d"`,
       },
       redis: {
         authorization: "AUTH $pass",
@@ -650,7 +653,6 @@ new ucmd("helper")
       bash: {
         scriptDir: 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"',
         disableService: "systemctl disable $SERVICENAME",
-        grepRegex: `grep -P "\\d"`,
         shEcho: "sh -c 'echo 0'",
       },
     };
