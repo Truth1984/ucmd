@@ -10,6 +10,7 @@ var fs = require("fs");
 var read = require("readdirp");
 var paths = require("path");
 var mp = require("pollute");
+var shellParser = require("node-shell-parser");
 let random = () => Math.floor(Math.random() * 10000).toString();
 require("./test");
 
@@ -551,6 +552,15 @@ new ucmd("replace", "filename", "old", "new")
       argv.f
     }`;
     cmd(line);
+  });
+
+new ucmd("json", "cmd")
+  .describer({
+    main: "parse result to json",
+    options: [{ arg: "c", describe: "command result to json" }],
+  })
+  .perform((argv) => {
+    console.log(shellParser(cmd(argv.c, false, true)));
   });
 
 new ucmd("helper")
