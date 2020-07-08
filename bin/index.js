@@ -420,6 +420,7 @@ new ucmd("docker")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
+      { arg: "b", describe: "build dockerfile with result name, can be [targetName, sourcefile]" },
       { arg: "o", describe: "docker find port" },
       { arg: "s", describe: "stop" },
       { arg: "l", describe: "logs path of container" },
@@ -437,6 +438,12 @@ new ucmd("docker")
     if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
+    if (argv.b) {
+      if (argv.b.indexOf("[") == -1) argv.b = [argv.b];
+      else argv.b = JSON.parse(argv.b);
+      let sentence = `sudo docker image build -t ${argv.b[0]} ${argv.b[1] ? "-f " + argv.b[1] : ""}  . `;
+      cmd(sentence);
+    }
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
 
