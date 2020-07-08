@@ -591,20 +591,32 @@ new ucmd("ini", "file")
     options: [
       { arg: "f", describe: "file location to workwith" },
       { arg: "j", describe: "json data to merge with" },
+      { arg: "i", describe: "insert json into category" },
       { arg: "p", describe: "print json result", boolean: true },
       { arg: "b", describe: "backup file", boolean: true },
     ],
   })
   .perform((argv) => {
     if (!fs.existsSync(argv.f)) return console.log("file not exist", argv.f);
+    cmd(`sudo chmod 777 ${argv.f}`);
     if (argv.p) console.log(iniParser.parse(fs.readFileSync(argv.f).toString()));
     if (argv.b) cmd(`u backup ${argv.f}`);
-    if (argv.j)
-      fs.writeFileSync(
-        argv.f,
-        iniParser.encode(Object.assign(iniParser.parse(fs.readFileSync(argv.f).toString()), parseJson(argv.j, false))),
-        { flag: "w+" }
-      );
+    let objectify = () => iniParser.parse(fs.readFileSync(argv.f).toString());
+    let towrite = (content) => fs.writeFileSync(argv.f, iniParser.encode(content), { flag: "w+" });
+    if (argv.j) return towrite(Object.assign(objectify(), parseJson(argv.j, false)));
+    if (argv.i) {
+      let data = objectify();
+      let input = parseJson(argv.i, false);
+      for (let i of Object.keys(input)) {
+        if (!data[i]) data[i] = {};
+        if (typeof data[i] == "object") {
+          for (let j of Object.keys(input[i])) data[i][j] = input[i][j];
+        } else {
+          data[i] = input[i];
+        }
+      }
+      return towrite(data);
+    }
   });
 
 new ucmd("helper")
