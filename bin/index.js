@@ -226,13 +226,18 @@ new ucmd("process", "name")
     options: [
       { arg: "n", describe: "name to grep" },
       { arg: "f", describe: "full command display", boolean: true },
+      { arg: "K", describe: "kill relevant process" },
     ],
   })
   .perform((argv) => {
     let base = "ps -aux";
     if (argv.f) base += "wwf";
-    if (!argv.n) return cmd(base);
-    return cmd(base + " | grep " + argv.n);
+    if (argv.n) return cmd(base + " | grep " + argv.n);
+    if (argv.K) {
+      let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
+      return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
+    }
+    return cmd(base);
   });
 
 new ucmd("gitclone", "name", "user")
@@ -728,6 +733,7 @@ new ucmd("helper")
         disableService: "systemctl disable $SERVICENAME",
         shEcho: "sh -c 'echo 0'",
         mkdir: "mkdir -p",
+        fullOutput: "2>&1",
       },
     };
     if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
