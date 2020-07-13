@@ -108,12 +108,14 @@ new ucmd("download", "url", "filename")
       { arg: "u", describe: "url or m3u8" },
       { arg: "f", describe: "filename or location" },
       { arg: "a", describe: "absolute, else it will be in ~/Downloads folder", boolean: true },
+      { arg: "w", describe: "use wget module", boolean: true },
     ],
   })
   .perform((argv) => {
     let filename = argv.f;
     if (!argv.a) filename = os.homedir + "/Downloads/" + filename;
     let url = argv.u;
+    if (argv.w) return cmd(`sudo wget -o ${argv.filename} ${url}`);
     if (/\.m3u8/.test(url)) {
       download.m3u8(url, filename);
     } else {
