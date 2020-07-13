@@ -736,8 +736,8 @@ new ucmd("helper")
         fullOutput: "2>&1",
       },
     };
-    if (argv.n) console.log(JSON.stringify(list[argv.n], undefined, "\t"));
-    else console.log(JSON.stringify(list, undefined, "\t"));
+    if (argv.n) console.log(list[argv.n]);
+    else console.log(list);
   });
 
 new ucmd().run();
