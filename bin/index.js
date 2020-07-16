@@ -434,6 +434,7 @@ new ucmd("docker")
       { arg: "L", describe: "live log" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "stop container and remove corresponding volume" },
+      { arg: "e", describe: "execute with bash" },
     ],
   })
   .perform((argv) => {
@@ -445,6 +446,8 @@ new ucmd("docker")
     if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
+    if (argv.e)
+      cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} bash`);
     if (argv.b) {
       if (argv.b.indexOf("[") == -1) argv.b = [argv.b];
       else argv.b = JSON.parse(argv.b);
@@ -649,38 +652,7 @@ new ucmd("helper")
         yum: "epel-release",
         ubuntu: "",
         common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl ",
-        optional: "docker",
-        ubuntuDocker: `sudo add-apt-repository \
-        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) \
-        stable && sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io `,
-        yumDC:
-          'sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose',
-        yumDocker:
-          "sudo yum remove docker \
-        docker-client \
-        docker-client-latest \
-        docker-common \
-        docker-latest \
-        docker-latest-logrotate \
-        docker-logrotate \
-        docker-engine && sudo yum install -y yum-utils && sudo yum-config-manager \
-        --add-repo \
-        https://download.docker.com/linux/centos/docker-ce.repo && sudo yum install docker-ce docker-ce-cli containerd.io",
-        prescript: `if ! [ -f "$HOME/.bash_mine" ]; then
-        touch $HOME/.bash_mine
-        mkdir $HOME/.npm_global
-        mkdir -p $HOME/.application/backup
-        echo 'source $HOME/.bash_mine' >> $HOME/.bashrc
-        echo 'if [ "$PWD" = "$HOME" ]; then cd Documents; fi;' >> $HOME/.bash_mine
-        echo 'function cdd { cd $1 && ls -a; }' >> $HOME/.bash_mine
-        echo 'PATH=$HOME/.npm_global/bin/:$PATH' >> $HOME/.bash_mine
-        echo 'UDATA=$HOME/.application' >> $HOME/.bash_mine
-        npm config set prefix $HOME/.npm_global
-        source $HOME/.bashrc
-    
-        git config --global alias.adog "log --all --decorate --oneline --graph"
-    fi`,
+        prescript: `wget -O - https://truth1984.github.io/testSites/s/prescript.sh | bash`,
       });
     let list = {
       screen: {
@@ -707,6 +679,7 @@ new ucmd("helper")
       grep: {
         or: "pattern1\\|pattern2",
         regex: `grep -P "\\d"`,
+        quiet: "grep -q",
       },
       redis: {
         authorization: "AUTH $pass",
