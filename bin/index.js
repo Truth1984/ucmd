@@ -382,17 +382,15 @@ new ucmd("service", "name")
     ],
   })
   .perform((argv) => {
-    let services = cmd(`service --status-all`, false, true).split("\n");
-
     let fuzzy = (name) => {
       let target = services.filter((item) => item.indexOf(name) > -1).map((i) => i.replace(/\[.+\]/, "").trim());
       if (target.length > 1) console.log("fuzzy: multiple target found", target);
       return target;
     };
 
-    if (argv.a) return console.log(services.filter((item) => item.indexOf("[ + ]") > -1));
-    if (argv.i) return console.log(services.filter((item) => item.indexOf("[ - ]") > -1));
-    if (argv.n) return cmd(`service ${fuzzy(argv.n)[0]} status`);
+    if (argv.a) return cmd(`systemctl list-units --type service -a | grep active`);
+    if (argv.i) return cmd(`systemctl list-units --type service -a | grep inactive`);
+    if (argv.n) return cmd(`systemctl status ${fuzzy(argv.n)[0]}`);
 
     if (argv.e) {
       let target = fuzzy(argv.e)[0];
@@ -410,7 +408,7 @@ new ucmd("service", "name")
       });
     }
 
-    cmd(`service --status-all`);
+    cmd(`systemctl list-units --type service --all`);
   });
 
 new ucmd("hash", "target")
@@ -651,8 +649,9 @@ new ucmd("helper")
       return console.log({
         yum: "epel-release",
         ubuntu: "",
-        common: "sudo psmisc net-tools nethogs openssh-server openssh-clients cronie curl ",
+        common: "psmisc net-tools nethogs openssh-server openssh-clients cronie ",
         prescript: `wget -O - https://truth1984.github.io/testSites/s/prescript.sh | bash`,
+        tools: `wget -O - https://truth1984.github.io/testSites/s/tools.sh | bash`,
       });
     let list = {
       screen: {
