@@ -187,12 +187,14 @@ new ucmd("sysinfo")
       { arg: "f", describe: "file information" },
       { arg: "d", describe: "directory information", boolean: true },
       { arg: "h", describe: "hardware information", boolean: true },
+      { arg: "l", describe: "large file on this directory" },
     ],
   })
   .perform((argv) => {
     if (argv.f) return cmd("stat " + argv.f);
     if (argv.d) return cmd("ls -alF");
     if (argv.h) return cmd("df -h");
+    if (argv.l) return cmd("du -ahx . | sort -rh | head -" + u.int(argv.l) ? argv.l : 20);
     console.log({
       hostname: os.hostname(),
       platform: os.platform(),
