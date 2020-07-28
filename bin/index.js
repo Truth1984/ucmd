@@ -636,6 +636,23 @@ new ucmd("ini", "file")
     }
   });
 
+//test
+new ucmd("usermod", "group", "user")
+  .describer({
+    main: "use usermod to assign privilege to particular user, take effect after reboot",
+    options: [
+      { arg: "g", describe: "group to modify" },
+      { arg: "u", describe: "user to modify", default: process.env.USER },
+      { arg: "i", describe: "insert, add to group" },
+      { arg: "r", describe: "remove user from user group" },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.g == undefined) return console.log("group undefined");
+    if (argv.i) return cmd(`sudo usermod -aG ${argv.g} ${argv.u}`, true);
+    if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
