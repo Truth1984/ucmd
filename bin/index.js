@@ -636,7 +636,6 @@ new ucmd("ini", "file")
     }
   });
 
-//test
 new ucmd("usermod", "group", "user")
   .describer({
     main: "use usermod to assign privilege to particular user, take effect after reboot",
@@ -645,9 +644,13 @@ new ucmd("usermod", "group", "user")
       { arg: "u", describe: "user to modify", default: process.env.USER },
       { arg: "i", describe: "insert, add to group" },
       { arg: "r", describe: "remove user from user group" },
+      { arg: "G", describe: "group lists", boolean: true },
+      { arg: "D", describe: "add current user to docker group", boolean: true },
     ],
   })
   .perform((argv) => {
+    if (argv.G) return cmd(`getent group`);
+    if (argv.D) return cmd(`sudo usermod -aG docker ${argv.u}`);
     if (argv.g == undefined) return console.log("group undefined");
     if (argv.i) return cmd(`sudo usermod -aG ${argv.g} ${argv.u}`, true);
     if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
