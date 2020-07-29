@@ -650,7 +650,10 @@ new ucmd("usermod", "group", "user")
   })
   .perform((argv) => {
     if (argv.G) return cmd(`getent group`);
-    if (argv.D) return cmd(`sudo usermod -aG docker ${argv.u}`);
+    if (argv.D)
+      return cmd(
+        `sudo usermod -aG docker ${argv.u} && sudo chown "${argv.u}":"${argv.u}" /home/"${argv.u}"/.docker -R`
+      );
     if (argv.g == undefined) return console.log("group undefined");
     if (argv.i) return cmd(`sudo usermod -aG ${argv.g} ${argv.u}`, true);
     if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
