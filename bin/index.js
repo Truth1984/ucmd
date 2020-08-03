@@ -577,6 +577,26 @@ new ucmd("replace", "filename", "old", "new")
     cmd(line);
   });
 
+new ucmd("pkgjson", "name", "script")
+  .describer({
+    main: "package json modifier",
+    options: [
+      { arg: "n", describe: "name of the script" },
+      { arg: "s", describe: "script to add or replace" },
+      { arg: "l", describe: "list all the commands", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let path = "package.json";
+    if (!fs.existsSync(path)) path = "../package.json";
+    if (!fs.existsSync(path)) return console.error("Error: package.json file does not exist");
+    let data = JSON.parse(fs.readFileSync(path).toString());
+    if (argv.l) return console.log(data["scripts"]);
+    if (argv.s == undefined) return console.log(data["scripts"][argv.s]);
+    data["scripts"][argv.n] = argv.s;
+    fs.writeFileSync(path, JSON.stringify(data, undefined, "  "));
+  });
+
 new ucmd("json", "cmd")
   .describer({
     main: "parse result to json",
