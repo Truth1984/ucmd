@@ -170,7 +170,7 @@ new ucmd("search", "target", "basedir")
     let fileOnly = argv.f;
     let depth = argv.s;
 
-    let nameArr = await read.promise(basedir, { type: "files_directories", depth, fileFilter: ignores });
+    let nameArr = await read.promise(basedir, { type: "files_directories", depth, directoryFilter: ignores });
 
     if (!directoryOnly && !fileOnly) {
       for (let i of nameArr) if (i.basename.indexOf(target) > -1) console.log(i);
