@@ -25,6 +25,15 @@ let parseJson = (string, tostring = true) => {
   return eval("(" + string + ")");
 };
 
+let fileExistProcess = (file) => {
+  file = file.replace("~", process.env.HOME);
+  if (!fs.existsSync(file)) {
+    console.log("error:", file, "does not exist");
+    process.exit(1);
+  }
+  return file;
+};
+
 let getTime = () => {
   let dobj = new Date();
   return {
@@ -616,7 +625,7 @@ new ucmd("backup", "file")
     options: [{ arg: "f", describe: "file location" }],
   })
   .perform((argv) => {
-    if (!fs.existsSync(argv.f)) return console.log("file not exist", argv.f);
+    argv.f = fileExistProcess(argv.f);
     let time = getTime();
     let filename = paths.basename(argv.f) + [time.year, time.month, time.day, time.hour, time.minute].join("-");
     return cmd(`cp ${argv.f} $UDATA/backup/${filename} && echo "${filename} > ${argv.f}" >> $UDATA/backup/readme.md`);
@@ -634,7 +643,7 @@ new ucmd("ini", "file")
     ],
   })
   .perform((argv) => {
-    if (!fs.existsSync(argv.f)) return console.log("file not exist", argv.f);
+    argv.f = fileExistProcess(argv.f);
     cmd(`sudo chmod 777 ${argv.f}`);
     if (argv.p) console.log(iniParser.parse(fs.readFileSync(argv.f).toString()));
     if (argv.b) cmd(`u backup ${argv.f}`);
