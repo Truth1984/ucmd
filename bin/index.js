@@ -394,6 +394,10 @@ new ucmd("service", "name")
   })
   .perform((argv) => {
     let fuzzy = (name) => {
+      let jsonresult = cmd(`u json -j "systemctl list-units --type service -a | cat"`, false, true);
+      let services = JSON.parse(jsonresult)
+        .filter((i) => i != null)
+        .map((i) => i.UNIT);
       let target = services.filter((item) => item.indexOf(name) > -1).map((i) => i.replace(/\[.+\]/, "").trim());
       if (target.length > 1) console.log("fuzzy: multiple target found", target);
       return target;
@@ -613,10 +617,13 @@ new ucmd("json", "cmd")
       { arg: "c", describe: "command result to json" },
       { arg: "s", describe: "separator of the result", default: " " },
       { arg: "l", describe: "line to skip", default: 0 },
+      { arg: "j", describe: "Json stringify the result", boolean: true },
     ],
   })
   .perform((argv) => {
-    console.log(shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l }));
+    let result = shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l });
+    if (argv.j) console.log(JSON.stringify(result));
+    else console.log(result);
   });
 
 new ucmd("backup", "file")
