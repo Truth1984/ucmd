@@ -446,7 +446,7 @@ new ucmd("docker")
       { arg: "e", describe: "execute with bash" },
     ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
     if (argv.c) cmd("sudo docker system prune --volumes");
     if (argv.i) cmd("sudo docker images" + (argv.a ? " -a" : ""));
     if (argv.p) cmd("sudo docker ps" + (argv.a ? " -a" : ""));
@@ -469,9 +469,9 @@ new ucmd("docker")
       let mounts = target[0]["Mounts"];
       let qs = (volume) =>
         cmdq({ ["remove volume" + volume + " (N)"]: false }).then((result) => {
-          if (result.toLowerCase() == "y") cmd(`sudo rm -rf ${volume}`);
+          if (result && result.toLowerCase() == "y") cmd(`sudo rm -rf ${volume}`);
         });
-      if (mounts != undefined) for (let i of mounts) qs(i["Source"]);
+      if (mounts != undefined) for (let i of mounts) await qs(i["Source"]);
     }
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
