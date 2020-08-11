@@ -749,6 +749,7 @@ new ucmd("helper")
         common: "psmisc net-tools nethogs openssh-server openssh-clients cronie ",
         prescript: `wget -O - https://truth1984.github.io/testSites/s/prescript.sh | bash`,
         tools: `wget -O - https://truth1984.github.io/testSites/s/tools.sh | bash`,
+        desktop: `wget -O - https://truth1984.github.io/testSites/s/desktop.sh | bash`,
       });
     let list = {
       screen: {
