@@ -410,7 +410,7 @@ new ucmd("service", "name")
     if (argv.e) {
       let target = fuzzy(argv.e)[0];
       return cmdq({ ["enable service: " + target + "(y/N)"]: false }).then((ans) => {
-        if (ans[0] === "y") cmd("sudo systemctl enable " + target);
+        if (ans[0] === "y") cmd(`sudo systemctl enable ${target} && sudo systemctl start ${target}`, true);
         cmd(`service ${target} status`);
       });
     }
@@ -418,7 +418,7 @@ new ucmd("service", "name")
     if (argv.d) {
       let target = fuzzy(argv.d)[0];
       return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
-        if (ans[0] === "y") cmd("sudo systemctl disable " + target, true);
+        if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
         cmd(`service ${target} status`);
       });
     }
