@@ -470,8 +470,13 @@ new ucmd("docker")
     }
     if (argv.R) {
       let target = JSON.parse(cmd(`sudo docker inspect ${argv.R}`, false, true));
-      let volume = target[0]["Mounts"][0]["Source"];
-      cmd(`sudo docker container stop ${argv.R} && sudo docker container rm ${argv.R} && sudo rm -rf ${volume}`);
+      cmd(`sudo docker container stop ${argv.R} && sudo docker container rm ${argv.R}`);
+      let mounts = target[0]["Mounts"];
+      let qs = (volume) =>
+        cmdq({ ["remove volume" + volume + " (N)"]: false }).then((result) => {
+          if (result.toLowerCase() == "y") cmd(`sudo rm -rf ${volume}`);
+        });
+      if (mounts != undefined) for (let i of mounts) qs(i["Source"]);
     }
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
