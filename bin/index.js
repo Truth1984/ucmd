@@ -446,7 +446,8 @@ new ucmd("docker")
       { arg: "l", describe: "logs path of container" },
       { arg: "L", describe: "live log" },
       { arg: "n", describe: "network status" },
-      { arg: "r", describe: "stop container and remove corresponding volume" },
+      { arg: "r", describe: "remove container" },
+      { arg: "R", describe: "remove container and its volume" },
       { arg: "e", describe: "execute with bash" },
     ],
   })
@@ -466,6 +467,11 @@ new ucmd("docker")
       else argv.b = JSON.parse(argv.b);
       let sentence = `sudo docker image build -t ${argv.b[0]} ${argv.b[1] ? "-f " + argv.b[1] : ""}  . `;
       cmd(sentence);
+    }
+    if (argv.R) {
+      let target = JSON.parse(cmd(`sudo docker inspect ${argv.R}`, false, true));
+      let volume = target[0]["Mounts"][0]["Source"];
+      cmd(`sudo docker container stop ${argv.R} && sudo docker container rm ${argv.R} && sudo rm -rf ${volume}`);
     }
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
   });
