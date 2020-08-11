@@ -15,11 +15,6 @@ var iniParser = require("ini");
 let random = () => Math.floor(Math.random() * 10000).toString();
 require("./test");
 
-let ost = () => {
-  if (fs.existsSync("/etc/debian_version")) return "apt";
-  if (fs.existsSync("/etc/redhat-release")) return "yum";
-};
-
 let parseJson = (string, tostring = true) => {
   if (tostring) return JSON.stringify(eval("(" + string + ")"));
   return eval("(" + string + ")");
@@ -706,6 +701,36 @@ new ucmd("usermod", "group", "user")
     if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
   });
 
+new ucmd("install", "name")
+  .describer({
+    main: "install command on different platform",
+    options: [
+      { arg: "n", describe: "name of the package" },
+      { arg: "l", describe: "list installed package", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let platform = "";
+    if (fs.existsSync("/etc/debian_version")) platform = "apt";
+    if (fs.existsSync("/etc/redhat-release")) platform = "yum";
+    if (os.platform() == "darwin") platform = "brew";
+    if (os.platform() == "win32") platform = "choco";
+
+    if (argv.n) {
+      if (platform == "apt") return cmd(`sudo apt-get install -y ${argv.n}`);
+      if (platform == "yum") return cmd(`sudo yum install -y ${argv.n}`);
+      if (platform == "brew") return cmd(`sudo brew install -y ${argv.n}`);
+      if (platform == "choco") return cmd(`choco install -y ${argv.n}`);
+    }
+
+    if (argv.l) {
+      if (platform == "apt") return cmd(`sudo apt list --installed`);
+      if (platform == "yum") return cmd(`yum list installed`);
+      if (platform == "brew") return cmd(`sudo brew list`);
+      if (platform == "choco") return cmd(`choco list -li`);
+    }
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
@@ -759,10 +784,6 @@ new ucmd("helper")
       },
       apt: {
         "remove unnecessary ppa": "cd /etc/apt/sources.list.d",
-        "list installed": "sudo apt list --installed",
-      },
-      yum: {
-        "list installed": "yum list installed",
       },
       network: {
         "edit network config": "sudo nano /etc/network/interfaces",
@@ -776,7 +797,6 @@ new ucmd("helper")
       },
       bash: {
         scriptDir: 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"',
-        disableService: "systemctl disable $SERVICENAME",
         shEcho: "sh -c 'echo 0'",
         mkdir: "mkdir -p",
         fullOutput: "2>&1",
