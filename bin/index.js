@@ -9,10 +9,8 @@ var os = require("os");
 var fs = require("fs");
 var read = require("readdirp");
 var paths = require("path");
-var mp = require("pollute");
 var shellParser = require("../helper/shell-parser");
 var iniParser = require("ini");
-let random = () => Math.floor(Math.random() * 10000).toString();
 require("./test");
 
 let parseJson = (string, tostring = true) => {
@@ -63,7 +61,7 @@ new ucmd("port", "portnum")
     return cmd("sudo netstat -lntup | grep " + argv.p);
   });
 
-new ucmd("ip").describer({ main: "find local ip adress" }).perform((argv) => cmd("ifconfig | grep inet", true));
+new ucmd("ip").describer({ main: "find local ip adress" }).perform(() => cmd("ifconfig | grep inet", true));
 
 new ucmd("network", "device")
   .describer({
@@ -198,7 +196,7 @@ new ucmd("sysinfo")
     if (argv.f) return cmd("stat " + argv.f);
     if (argv.d) return cmd("ls -alF");
     if (argv.h) return cmd("df -h");
-    if (argv.l) return cmd("du -ahx . | sort -rh | head -" + u.int(argv.l) ? argv.l : 20);
+    if (argv.l) return cmd("du -ahx . | sort -rh | head -" + Number.parseInt(argv.l) ? argv.l : 20);
     console.log({
       hostname: os.hostname(),
       platform: os.platform(),
@@ -383,6 +381,7 @@ new ucmd("service", "name")
       { arg: "n", describe: "name of the service, check stauts" },
       { arg: "e", describe: "enable a service" },
       { arg: "d", describe: "disable a service" },
+      { arg: "r", describe: "restart service" },
       { arg: "a", describe: "active process", boolean: true },
       { arg: "i", describe: "inactive process", boolean: true },
     ],
@@ -393,8 +392,12 @@ new ucmd("service", "name")
       let services = JSON.parse(jsonresult)
         .filter((i) => i != null)
         .map((i) => i.UNIT);
-      let target = services.filter((item) => item.indexOf(name) > -1).map((i) => i.replace(/\[.+\]/, "").trim());
-      if (target.length > 1) console.log("fuzzy: multiple target found", target);
+      let target = services
+        .filter((item) => item.indexOf(name) > -1)
+        .map((i) => i.replace(/\[.+\]/, "").trim())
+        .sort()
+        .reverse();
+      if (target.length > 1) console.log("fuzzy: multiple target found, using first one", target);
       return target;
     };
 
@@ -416,6 +419,11 @@ new ucmd("service", "name")
         if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
         cmd(`service ${target} status`);
       });
+    }
+
+    if (argv.r) {
+      let target = fuzzy(argv.r)[0];
+      return cmd(`sudo systemctl restart ${target}`);
     }
 
     cmd(`systemctl list-units --type service --all`);
