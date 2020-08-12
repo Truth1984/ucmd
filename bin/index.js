@@ -394,22 +394,27 @@ new ucmd("service", "name")
         .map((i) => i.UNIT);
       let target = services
         .filter((item) => item.indexOf(name) > -1)
-        .map((i) => i.replace(/\[.+\]/, "").trim())
+        .map((i) =>
+          i
+            .replace(/\[.+\]/, "")
+            .replace(/[^a-zA-Z_-]/, "")
+            .trim()
+        )
         .sort((a, b) => a.length - b.length);
       if (target.length > 1) console.log("fuzzy: multiple target found, using first one", target);
 
       return target;
     };
 
-    if (argv.a) return cmd(`systemctl list-units --type service -a | grep active`);
-    if (argv.i) return cmd(`systemctl list-units --type service -a | grep inactive`);
-    if (argv.n) return cmd(`systemctl status ${fuzzy(argv.n)[0]}`);
+    if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
+    if (argv.i) return cmd(`sudo systemctl list-units --type service -a --state=inactive`);
+    if (argv.n) return cmd(`sudo systemctl status ${fuzzy(argv.n)[0]}`);
 
     if (argv.e) {
       let target = fuzzy(argv.e)[0];
       return cmdq({ ["enable service: " + target + "(y/N)"]: false }).then((ans) => {
         if (ans[0] === "y") cmd(`sudo systemctl enable ${target} && sudo systemctl start ${target}`, true);
-        cmd(`service ${target} status`);
+        cmd(`sudo service ${target} status`);
       });
     }
 
@@ -417,7 +422,7 @@ new ucmd("service", "name")
       let target = fuzzy(argv.d)[0];
       return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
         if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
-        cmd(`service ${target} status`);
+        cmd(`sudo service ${target} status`);
       });
     }
 
@@ -426,7 +431,7 @@ new ucmd("service", "name")
       return cmd(`sudo systemctl restart ${target}`);
     }
 
-    cmd(`systemctl list-units --type service --all`);
+    cmd(`sudo systemctl list-units --type service --all`);
   });
 
 new ucmd("hash", "target")
