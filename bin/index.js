@@ -11,6 +11,7 @@ var read = require("readdirp");
 var paths = require("path");
 var shellParser = require("../helper/shell-parser");
 var iniParser = require("ini");
+var u = require("awadau");
 require("./test");
 
 let parseJson = (string, tostring = true) => {
@@ -389,7 +390,8 @@ new ucmd("service", "name")
   .perform((argv) => {
     let fuzzy = (name) => {
       let jsonresult = cmd(`u json -j "systemctl list-units --type service -a | cat"`, false, true);
-      let services = JSON.parse(jsonresult)
+      let services = u
+        .stringToJson(jsonresult)
         .filter((i) => i != null)
         .map((i) => i.UNIT);
       let target = services
