@@ -817,6 +817,9 @@ new ucmd("helper")
         mkdir: "mkdir -p",
         fullOutput: "2>&1",
       },
+      sudo: {
+        commandNotFound: "sudo ln -s $originPath /usr/bin/$NAME",
+      },
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);
