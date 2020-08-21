@@ -176,10 +176,11 @@ new ucmd("search", "target", "basedir")
     let nameArr = await read.promise(basedir, { type: "files_directories", depth, directoryFilter: ignores });
 
     if (!directoryOnly && !fileOnly) {
-      for (let i of nameArr) if (i.basename.indexOf(target) > -1) console.log(i);
+      for (let i of nameArr) if (u.stringToRegex(target).test(i.basename)) console.log(i);
     } else {
       for (let i of nameArr)
-        if (i.basename.indexOf(target) > -1 && (i.dirent.isDirectory() ? directoryOnly : fileOnly)) console.log(i);
+        if (u.stringToRegex(target).test(i.basename) && (i.dirent.isDirectory() ? directoryOnly : fileOnly))
+          console.log(i);
     }
   });
 
@@ -638,11 +639,22 @@ new ucmd("json", "cmd")
       { arg: "c", describe: "command result to json" },
       { arg: "s", describe: "separator of the result", default: " " },
       { arg: "l", describe: "line to skip", default: 0 },
+      { arg: "k", describe: "key path to get from json, e.g: a,b,c" },
       { arg: "j", describe: "Json stringify the result", boolean: true },
     ],
   })
   .perform((argv) => {
-    let result = shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l });
+    let result =
+      u._parseJsonCheck(cmd(argv.c, false, true)) == null
+        ? shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l })
+        : u.stringToJson(cmd(argv.c, false, true));
+    if (argv.k) {
+      let copy = u.deepCopy(result);
+      u.stringToArray(argv.k, ",").map((k) => {
+        copy = copy[k];
+      });
+      return console.log(copy);
+    }
     if (argv.j) console.log(JSON.stringify(result));
     else console.log(result);
   });
