@@ -671,6 +671,23 @@ new ucmd("backup", "file")
     return cmd(`cp ${argv.f} $UDATA/backup/${filename} && echo "${filename} > ${argv.f}" >> $UDATA/backup/readme.md`);
   });
 
+new ucmd("regex", "string", "regexp")
+  .describer({
+    main: "js regular expression",
+    options: [
+      { arg: "l", describe: "line of string" },
+      { arg: "r", describe: "regex" },
+      { arg: "s", describe: "substite" },
+      { arg: "g", describe: "global flag", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let re = argv.r;
+    console.log(re);
+    if (argv.s) return console.log(u.reSub(argv.l, re, argv.s));
+    return console.log(u.refind(argv.l, re));
+  });
+
 new ucmd("ini", "file")
   .describer({
     main: "parse ini file to json and vice-versa",
