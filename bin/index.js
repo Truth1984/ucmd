@@ -683,7 +683,6 @@ new ucmd("regex", "string", "regexp")
   })
   .perform((argv) => {
     let re = argv.r;
-    console.log(re);
     if (argv.s) return console.log(u.reSub(argv.l, re, argv.s));
     return console.log(u.refind(argv.l, re));
   });
