@@ -472,7 +472,7 @@ new ucmd("docker")
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.e)
-      cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} bash`);
+      cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} /bin/bash`);
     if (argv.b) {
       if (argv.b.indexOf("[") == -1) argv.b = [argv.b];
       else argv.b = JSON.parse(argv.b);
