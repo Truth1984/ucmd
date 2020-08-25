@@ -234,6 +234,7 @@ new ucmd("process", "name")
     options: [
       { arg: "n", describe: "name to grep" },
       { arg: "f", describe: "full command display", boolean: true },
+      { arg: "s", describe: "sorted ps command, get first 10", boolean: true },
       { arg: "K", describe: "kill relevant process" },
     ],
   })
@@ -241,6 +242,7 @@ new ucmd("process", "name")
     let base = "ps -aux";
     if (argv.f) base += "wwf";
     if (argv.n) return cmd(base + " | grep " + argv.n);
+    if (argv.s) return cmd("ps auxk -%cpu,%mem | head -n10");
     if (argv.K) {
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
@@ -640,6 +642,7 @@ new ucmd("json", "cmd")
       { arg: "s", describe: "separator of the result", default: " " },
       { arg: "l", describe: "line to skip", default: 0 },
       { arg: "k", describe: "key path to get from json, e.g: a,b,c" },
+      { arg: "K", describe: "keys of map get exist" },
       { arg: "j", describe: "Json stringify the result", boolean: true },
     ],
   })
@@ -655,6 +658,13 @@ new ucmd("json", "cmd")
       });
       return console.log(copy);
     }
+    if (argv.K) {
+      let copy = u.deepCopy(result);
+      let keys = u.stringToArray(argv.K, ",");
+      if (Array.isArray(copy)) return console.log(copy.map((i) => u.mapGetExist(i, ...keys)));
+      return console.log(u.mapGetExist(copy, keys));
+    }
+
     if (argv.j) console.log(JSON.stringify(result));
     else console.log(result);
   });
