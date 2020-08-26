@@ -769,7 +769,7 @@ new ucmd("install", "name")
 
     if (argv.l) {
       if (platform == "apt") return cmd(`sudo apt list --installed`);
-      if (platform == "yum") return cmd(`yum list installed`);
+      if (platform == "yum") return cmd(`sudo yum list installed`);
       if (platform == "brew") return cmd(`sudo brew list`);
       if (platform == "choco") return cmd(`choco list -li`);
     }
