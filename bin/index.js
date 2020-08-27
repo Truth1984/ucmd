@@ -751,6 +751,7 @@ new ucmd("install", "name")
     options: [
       { arg: "n", describe: "name of the package" },
       { arg: "l", describe: "list installed package", boolean: true },
+      { arg: "c", describe: "clean" },
     ],
   })
   .perform((argv) => {
@@ -772,6 +773,11 @@ new ucmd("install", "name")
       if (platform == "yum") return cmd(`sudo yum list installed`);
       if (platform == "brew") return cmd(`sudo brew list`);
       if (platform == "choco") return cmd(`choco list -li`);
+    }
+
+    if (argv.c) {
+      if (platform == "apt") return cmd(`sudo apt-get clean`);
+      if (platform == "yum") return cmd(`sudo yum clean all`);
     }
   });
 
