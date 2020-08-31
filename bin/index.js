@@ -176,7 +176,7 @@ new ucmd("search", "target", "basedir")
     let nameArr = await read.promise(basedir, { type: "files_directories", depth, directoryFilter: ignores });
 
     if (!directoryOnly && !fileOnly) {
-      for (let i of nameArr) if (u.stringToRegex(target).test(i.basename)) console.log(i);
+      for (let i of nameArr) if (u.contains(i.basename, target)) console.log(i);
     } else {
       for (let i of nameArr)
         if (u.stringToRegex(target).test(i.basename) && (i.dirent.isDirectory() ? directoryOnly : fileOnly))
