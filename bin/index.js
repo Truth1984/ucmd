@@ -236,6 +236,7 @@ new ucmd("process", "name")
       { arg: "f", describe: "full command display", boolean: true },
       { arg: "s", describe: "sorted ps command, get first 10", boolean: true },
       { arg: "K", describe: "kill relevant process" },
+      { arg: "d", describe: "directory of running process, require pid" },
     ],
   })
   .perform((argv) => {
@@ -247,6 +248,7 @@ new ucmd("process", "name")
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
     }
+    if (argv.d) cmd(`sudo pwdx ${argv.d}`);
     return cmd(base);
   });
 
