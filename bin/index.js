@@ -69,11 +69,16 @@ new ucmd("network", "device")
     main: "display live network",
     options: [
       { arg: "d", describe: "device for showing network details" },
+      { arg: "t", describe: "tcp connection status" },
       { arg: "l", describe: "list the network", boolean: true },
     ],
   })
   .perform((argv) => {
     if (argv.l) return cmd("sudo netstat -i");
+    if (argv.t) {
+      if (argv.d) return cmd(`sudo tcpdump -i ${argv.d}`);
+      return cmd(`sudo tcpdump`);
+    }
     if (argv.d) return cmd("sudo nethogs " + argv.d);
     return cmd("sudo nethogs -s");
   });
@@ -679,11 +684,11 @@ new ucmd("backup", "file")
 
 new ucmd("regex", "string", "regexp")
   .describer({
-    main: "js regular expression",
+    main: 'js regular expression, better use " to wrap around string',
     options: [
       { arg: "l", describe: "line of string" },
       { arg: "r", describe: "regex" },
-      { arg: "s", describe: "substite" },
+      { arg: "s", describe: "substitute" },
       { arg: "g", describe: "global flag", boolean: true },
     ],
   })
