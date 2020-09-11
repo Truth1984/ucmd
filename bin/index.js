@@ -652,6 +652,7 @@ new ucmd("json", "cmd")
       u._parseJsonCheck(cmd(argv.c, false, true)) == null
         ? shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l })
         : u.stringToJson(cmd(argv.c, false, true));
+
     if (argv.k) {
       let copy = u.deepCopy(result);
       u.stringToArray(argv.k, ",").map((k) => {
@@ -668,6 +669,23 @@ new ucmd("json", "cmd")
 
     if (argv.j) console.log(JSON.stringify(result));
     else console.log(result);
+  });
+
+new ucmd("filter", "cmd")
+  .describer({
+    main: "filter columns of cmd",
+    options: [
+      { arg: "m", describe: "cmds" },
+      { arg: "c", describe: `columns to select, like '$1,"|",$2'` },
+      { arg: "j", describe: "json parse the result", boolean: true },
+      { arg: "J", describe: "json stringify", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let result = cmd(`${argv.m} | awk '{print${argv.c}}'`, false, true);
+    if (argv.j) return console.log(shellParser(result));
+    if (argv.J) return console.log(JSON.stringify(shellParser(result), undefined, ""));
+    return console.log(result);
   });
 
 new ucmd("backup", "file")
