@@ -406,7 +406,7 @@ new ucmd("service", "name")
         .map((i) => i.UNIT);
       let target = services
         .filter((item) => item.indexOf(name) > -1)
-        .map((i) => u.refind(i, /[\d\s].+/).trim())
+        .map((i) => u.refind(i, /[\d\w].+/).trim())
         .sort((a, b) => a.length - b.length);
       if (target.length > 1) console.log("fuzzy: multiple target found, using first one", target);
       return target;
