@@ -426,8 +426,9 @@ new ucmd("service", "name")
 
     if (argv.e) {
       let target = fuzzy(argv.e)[0];
+      if (!target) target = argv.e;
       return cmdq({ ["enable service: " + target + "(y/N)"]: false }).then((ans) => {
-        if (ans[0] === "y") cmd(`sudo systemctl enable ${target} && sudo systemctl start ${target}`, true);
+        if (ans[0] === "y") cmd(`sudo systemctl start ${target} && sudo systemctl enable ${target}`, true);
         cmd(`sudo service ${target} status`);
       });
     }
