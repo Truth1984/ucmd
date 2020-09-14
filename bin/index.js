@@ -163,10 +163,11 @@ new ucmd("search", "target", "basedir")
     options: [
       { arg: "t", describe: "target filename" },
       { arg: "b", describe: "base directory of the file" },
-      { arg: "i", describe: "Ignore directory like ['!.git'], Include like ['*.js']", default: [] },
+      { arg: "i", describe: "Ignore directory like ['!log'], Include like ['*_log']", default: ["!.git", "!*modules"] },
+      { arg: "I", describe: "Ignore files like ['!.git'], Include like ['*.js']" },
       { arg: "d", describe: "directory only", boolean: true },
       { arg: "f", describe: "file only", boolean: true },
-      { arg: "s", describe: "subdirectory depth", default: 2 },
+      { arg: "s", describe: "subdirectory depth", default: 3 },
     ],
   })
   .perform(async (argv) => {
@@ -174,12 +175,19 @@ new ucmd("search", "target", "basedir")
     let target = argv.t;
     let basedir = argv.b;
     let ignores = argv.i;
+    let fileIgnores = argv.I;
     let directoryOnly = argv.d;
     let fileOnly = argv.f;
     let depth = argv.s;
 
-    let nameArr = await read.promise(basedir, { type: "files_directories", depth, directoryFilter: ignores });
+    let options = {
+      type: "files_directories",
+      depth,
+      directoryFilter: ignores,
+    };
 
+    if (argv.I) options = u.mapMerge(options, { fileFilter: fileIgnores });
+    let nameArr = await read.promise(basedir, options);
     if (!directoryOnly && !fileOnly) {
       for (let i of nameArr) if (u.contains(i.basename, target)) console.log(i);
     } else {
@@ -617,7 +625,7 @@ new ucmd("replace", "filename", "old", "new")
 
 new ucmd("pkgjson", "name", "script")
   .describer({
-    main: "package json modifier",
+    main: "node package.json modifier",
     options: [
       { arg: "n", describe: "name of the script" },
       { arg: "s", describe: "script to add or replace" },
