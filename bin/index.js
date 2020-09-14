@@ -671,7 +671,7 @@ new ucmd("json", "cmd")
     else console.log(result);
   });
 
-new ucmd("filter", "cmd")
+new ucmd("filter", "cmd", "columns")
   .describer({
     main: "filter columns of cmd",
     options: [
