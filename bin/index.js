@@ -799,7 +799,7 @@ new ucmd("link", "name")
     let cmdPath = cmd(`command -v ${argv.n}`, false, true).trim();
     if (argv.r) {
       cmdPath = cmd(`sudo -u ${argv.u} command -v ${argv.r}`, false, true).trim();
-      return cmd(`sudo -u ${argv.u} rm -i ${cmdPath}`, true);
+      return cmd(`sudo -u ${argv.u} unlink ${cmdPath}`, true);
     }
 
     return cmd(`sudo -u ${argv.u} ln -s ${cmdPath} ${properPath}/${argv.n}`, true);
