@@ -782,6 +782,29 @@ new ucmd("usermod", "group", "user")
     if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
   });
 
+new ucmd("link", "name")
+  .describer({
+    main: "link(ln) particular command to target user group, solve command not found issue",
+    options: [
+      { arg: "n", describe: "name of the command" },
+      { arg: "u", describe: "user to use", default: "root" },
+      { arg: "r", describe: "remove link" },
+    ],
+  })
+  .perform((argv) => {
+    let targetPathArr = u.stringToArray(cmd(`sudo -u ${argv.u} sh -c 'echo $PATH'`, false, true), ":");
+    let properPath = targetPathArr.filter((i) => u.contains(i, "/bin"))[0];
+    if (!properPath) properPath = targetPathArr[0];
+
+    let cmdPath = cmd(`command -v ${argv.n}`, false, true).trim();
+    if (argv.r) {
+      cmdPath = cmd(`sudo -u ${argv.u} command -v ${argv.r}`, false, true).trim();
+      return cmd(`sudo -u ${argv.u} rm -i ${cmdPath}`, true);
+    }
+
+    return cmd(`sudo -u ${argv.u} ln -s ${cmdPath} ${properPath}/${argv.n}`, true);
+  });
+
 new ucmd("install", "name")
   .describer({
     main: "install command on different platform",
@@ -831,9 +854,6 @@ new ucmd("helper")
     if (argv.e) return cmd("code ~/Documents/ucmd");
     if (argv.s)
       return console.log({
-        yum: "epel-release",
-        ubuntu: "",
-        common: "psmisc net-tools nethogs openssh-server openssh-clients cronie ",
         prescript: `wget -O - https://truth1984.github.io/testSites/s/prescript.sh | bash`,
         tools: `wget -O - https://truth1984.github.io/testSites/s/tools.sh | bash`,
         desktop: `wget -O - https://truth1984.github.io/testSites/s/desktop.sh | bash`,
@@ -888,9 +908,6 @@ new ucmd("helper")
         shEcho: "sh -c 'echo 0'",
         mkdir: "mkdir -p",
         fullOutput: "2>&1",
-      },
-      sudo: {
-        commandNotFound: "sudo ln -s $originPath /usr/bin/$NAME",
       },
     };
     if (argv.n) console.log(list[argv.n]);
