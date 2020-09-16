@@ -852,6 +852,23 @@ new ucmd("eval", "line")
     console.log(eval(argv.l));
   });
 
+new ucmd("exist", "path")
+  .describer({
+    main: "check if file or direcoty exist",
+    options: [
+      { arg: "p", describe: "path to check" },
+      { arg: "f", describe: "files only", boolean: true },
+      { arg: "d", describe: "directory only", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let exist = fs.existsSync(argv.p);
+    if (!exist) return console.log(false);
+    if (argv.f) return console.log(!fs.lstatSync(argv.p).isDirectory());
+    if (argv.d) return console.log(fs.lstatSync(argv.p).isDirectory());
+    return console.log(true);
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
