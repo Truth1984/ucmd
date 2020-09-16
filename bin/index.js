@@ -713,14 +713,16 @@ new ucmd("regex", "string", "regexp")
   .describer({
     main: 'js regular expression, better use " to wrap around string',
     options: [
-      { arg: "l", describe: "line of string" },
+      { arg: "l", describe: 'line of string, better use "$(cmd)"' },
       { arg: "r", describe: "regex" },
+      { arg: "c", describe: "command to execute and get result as string to grep" },
       { arg: "s", describe: "substitute" },
       { arg: "g", describe: "global flag", boolean: true },
     ],
   })
   .perform((argv) => {
     let re = argv.r;
+    if (argv.c) argv.l = cmd(argv.c + " 2>&1", false, true);
     if (argv.s) return console.log(u.reSub(argv.l, re, argv.s));
     return console.log(u.refind(argv.l, re));
   });
@@ -839,6 +841,15 @@ new ucmd("install", "name")
       if (platform == "apt") return cmd(`sudo apt-get clean`);
       if (platform == "yum") return cmd(`sudo yum clean all`);
     }
+  });
+
+new ucmd("eval", "line")
+  .describer({
+    main: "eval for nodejs",
+    options: [{ arg: "l", describe: "line to eval" }],
+  })
+  .perform((argv) => {
+    console.log(eval(argv.l));
   });
 
 new ucmd("helper")
