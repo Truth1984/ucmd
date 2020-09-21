@@ -12,6 +12,7 @@ var paths = require("path");
 var shellParser = require("../helper/shell-parser");
 var iniParser = require("ini");
 var u = require("awadau");
+var multiSelect = require("../helper/multiSelect");
 require("./test");
 
 let parseJson = (string, tostring = true) => {
@@ -405,8 +406,8 @@ new ucmd("service", "name")
       { arg: "i", describe: "inactive process", boolean: true },
     ],
   })
-  .perform((argv) => {
-    let fuzzy = (name) => {
+  .perform(async (argv) => {
+    let fuzzy = (name, quitOnUdf = true) => {
       let jsonresult = cmd(`u json -j "systemctl list-units --type service -a | cat"`, false, true);
       let services = u
         .stringToJson(jsonresult)
@@ -416,35 +417,31 @@ new ucmd("service", "name")
         .filter((item) => item.indexOf(name) > -1)
         .map((i) => u.refind(i, /[\d\w].+/).trim())
         .sort((a, b) => a.length - b.length);
-      if (target.length > 1) console.log("fuzzy: multiple target found, using first one", target);
-      return target;
+      return multiSelect(target, undefined, undefined, quitOnUdf);
     };
+
+    let targetService = await fuzzy(argv.n);
 
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
     if (argv.i) return cmd(`sudo systemctl list-units --type service -a --state=inactive`);
-    if (argv.n) return cmd(`sudo systemctl status ${fuzzy(argv.n)[0]}`);
+    if (argv.n) return cmd(`sudo systemctl status ${targetService}`);
 
     if (argv.e) {
-      let target = fuzzy(argv.e)[0];
+      let target = await fuzzy(argv.n, false);
       if (!target) target = argv.e;
-      return cmdq({ ["enable service: " + target + "(y/N)"]: false }).then((ans) => {
-        if (ans[0] === "y") cmd(`sudo systemctl start ${target} && sudo systemctl enable ${target}`, true);
-        cmd(`sudo service ${target} status`);
-      });
+      cmd(`sudo systemctl start ${target} && sudo systemctl enable ${target}`, true);
+      cmd(`sudo service ${target} status`);
     }
 
     if (argv.d) {
-      let target = fuzzy(argv.d)[0];
+      let target = targetService;
       return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
         if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
         cmd(`sudo service ${target} status`);
       });
     }
 
-    if (argv.r) {
-      let target = fuzzy(argv.r)[0];
-      return cmd(`sudo systemctl restart ${target}`);
-    }
+    if (argv.r) return cmd(`sudo systemctl restart ${targetService}`);
 
     cmd(`sudo systemctl list-units --type service --all`);
   });
@@ -700,13 +697,35 @@ new ucmd("filter", "cmd", "columns")
 new ucmd("backup", "file")
   .describer({
     main: "backup a file to normal backup folder",
-    options: [{ arg: "f", describe: "file location" }],
+    options: [
+      { arg: "f", describe: "file location" },
+      { arg: "l", describe: "list current backed up file", boolean: true },
+      { arg: "r", describe: "remove backed up file" },
+    ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
+    let basePath = process.env.HOME + "/.application/backup/";
+    let recordsPath = basePath + ".readme.json";
+    if (!fs.existsSync(recordsPath)) fs.writeFileSync(recordsPath, "{}");
+    let backupJson = JSON.parse(fs.readFileSync(recordsPath).toString());
+    if (argv.l) return console.log(backupJson);
+
+    if (argv.r) {
+      let target = u.mapKeys(backupJson).filter((i) => u.contains(i, argv.r));
+      return multiSelect(target).then((data) => {
+        fs.unlinkSync(basePath + data);
+        delete backupJson[data];
+        return fs.writeFileSync(recordsPath, u.jsonToString(backupJson));
+      });
+    }
+
     argv.f = fileExistProcess(argv.f);
     let time = getTime();
     let filename = paths.basename(argv.f) + [time.year, time.month, time.day, time.hour, time.minute].join("-");
-    return cmd(`cp ${argv.f} $UDATA/backup/${filename} && echo "${filename} > ${argv.f}" >> $UDATA/backup/readme.md`);
+
+    backupJson[filename] = argv.f;
+    cmd(`cp ${argv.f} ${process.env.HOME}/.application/backup/${filename}`);
+    fs.writeFileSync(recordsPath, u.jsonToString(backupJson));
   });
 
 new ucmd("regex", "string", "regexp")
@@ -869,6 +888,31 @@ new ucmd("exist", "path")
     return console.log(true);
   });
 
+new ucmd("dep")
+  .describer({
+    main: "depdency repo modify",
+    options: [
+      { arg: "l", describe: "list depencies", boolean: true },
+      { arg: "r", describe: "remove target depencies" },
+    ],
+  })
+  .perform((argv) => {
+    let pkgPath = "";
+    if (fs.existsSync("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
+    if (fs.existsSync("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
+    if (pkgPath == "") return console.log("platform not supported");
+    let full = () => read.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
+    if (argv.l) return full().then(console.log);
+    if (argv.r) {
+      return full().then(async (d) => {
+        let processed = d.filter((i) => u.contains(i, argv.r));
+        let target = multiSelect(processed);
+        cmd(`u backup ${target}`);
+        fs.unlinkSync(target);
+      });
+    }
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
@@ -917,9 +961,6 @@ new ucmd("helper")
         authorization: "AUTH $pass",
         "get all keys": "keys *",
         "get expire time": "ttl KEY",
-      },
-      apt: {
-        "remove unnecessary ppa": "cd /etc/apt/sources.list.d",
       },
       network: {
         "edit network config": "sudo nano /etc/network/interfaces",
