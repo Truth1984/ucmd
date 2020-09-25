@@ -420,7 +420,7 @@ new ucmd("service", "name")
       return multiSelect(target, undefined, undefined, quitOnUdf);
     };
 
-    let targetService = await fuzzy(argv.n);
+    let targetService = (await fuzzy(argv.n))[0];
 
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
     if (argv.i) return cmd(`sudo systemctl list-units --type service -a --state=inactive`);
@@ -428,9 +428,9 @@ new ucmd("service", "name")
 
     if (argv.e) {
       let target = await fuzzy(argv.n, false);
-      if (!target) target = argv.e;
+      if (target.length == 0) target = argv.e;
       cmd(`sudo systemctl start ${target} && sudo systemctl enable ${target}`, true);
-      cmd(`sudo service ${target} status`);
+      return cmd(`sudo service ${target} status`);
     }
 
     if (argv.d) {
@@ -462,7 +462,8 @@ new ucmd("docker")
       { arg: "a", describe: "all display", boolean: true },
       { arg: "b", describe: "build dockerfile with result name, can be [targetName, sourcefile]" },
       { arg: "o", describe: "docker find port" },
-      { arg: "s", describe: "stop" },
+      { arg: "s", describe: "stop the container" },
+      { arg: "S", describe: "start the container" },
       { arg: "l", describe: "logs path of container" },
       { arg: "L", describe: "live log" },
       { arg: "n", describe: "network status" },
@@ -478,6 +479,7 @@ new ucmd("docker")
     if (argv.p) cmd("sudo docker ps | grep " + argv.p);
     if (argv.r) cmd(`sudo docker container stop ${argv.r} && sudo docker container rm ${argv.r}`);
     if (argv.s) cmd(`sudo docker container stop ${argv.s}`);
+    if (argv.S) cmd(`sudo docker container start ${argv.S}`);
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.e)
