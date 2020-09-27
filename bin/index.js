@@ -908,9 +908,9 @@ new ucmd("dep")
     if (argv.r) {
       return full().then(async (d) => {
         let processed = d.filter((i) => u.contains(i, argv.r));
-        let target = multiSelect(processed);
+        let target = await multiSelect(processed);
         cmd(`u backup ${target}`);
-        fs.unlinkSync(target);
+        cmd(`sudo rm -rf ${target}`);
       });
     }
   });
