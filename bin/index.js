@@ -738,6 +738,8 @@ new ucmd("regex", "string", "regexp")
       { arg: "r", describe: "regex" },
       { arg: "c", describe: "command to execute and get result as string to grep" },
       { arg: "s", describe: "substitute" },
+      { arg: "b", describe: "between in ITEM1,ITEM2 non-greedy" },
+      { arg: "B", describe: "between out ITEM1,ITEM2 non-greedy" },
       { arg: "g", describe: "global flag", boolean: true },
     ],
   })
@@ -745,6 +747,14 @@ new ucmd("regex", "string", "regexp")
     let re = argv.r;
     if (argv.c) argv.l = cmd(argv.c + " 2>&1", false, true);
     if (argv.s) return console.log(u.reSub(argv.l, re, argv.s));
+    if (argv.b) {
+      let items = u.stringToArray(argv.b, ",");
+      return console.log(u.refind(argv.l, u.regexBetweenInNonGreedy(items[0], items[1])));
+    }
+    if (argv.B) {
+      let items = u.stringToArray(argv.B, ",");
+      return console.log(u.refind(argv.l, u.regexBetweenOutNonGreedy(items[0], items[1])));
+    }
     return console.log(u.refind(argv.l, re));
   });
 
