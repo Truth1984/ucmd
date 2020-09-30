@@ -460,7 +460,7 @@ new ucmd("docker")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
-      { arg: "b", describe: "build dockerfile with result name, can be [targetName, sourcefile]" },
+      { arg: "b", describe: "build dockerfile with result name, as $targetName,$sourcefile" },
       { arg: "o", describe: "docker find port" },
       { arg: "s", describe: "stop the container" },
       { arg: "S", describe: "start the container" },
@@ -470,6 +470,7 @@ new ucmd("docker")
       { arg: "r", describe: "remove container" },
       { arg: "R", describe: "remove container and its volume" },
       { arg: "e", describe: "execute with bash" },
+      { arg: "e", describe: "execute directly with bash" },
     ],
   })
   .perform(async (argv) => {
@@ -484,11 +485,10 @@ new ucmd("docker")
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.e)
       cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} /bin/bash`);
+    if (argv.E) cmd(`sudo docker exec -it ${argv.E} /bin/bash`);
     if (argv.b) {
-      if (argv.b.indexOf("[") == -1) argv.b = [argv.b];
-      else argv.b = JSON.parse(argv.b);
-      let sentence = `sudo docker image build -t ${argv.b[0]} ${argv.b[1] ? "-f " + argv.b[1] : ""}  . `;
-      cmd(sentence);
+      argv.b = u.stringToArray(argv.b, ",");
+      cmd(`sudo docker image build -t ${argv.b[0]} ${argv.b[1] ? "-f " + argv.b[1] : ""}  . `);
     }
     if (argv.R) {
       let target = JSON.parse(cmd(`sudo docker inspect ${argv.R}`, false, true));
