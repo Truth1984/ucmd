@@ -108,6 +108,7 @@ new ucmd("open", "location")
     if (argv.d) argv.l = paths.join("~/Documents/", argv.l);
     if (process.platform == "darwin") cmd(`open ${argv.l}`);
     if (process.platform == "linux") cmd(`xdg-open ${argv.l}`);
+    if (process.platform == "win32") cmd(`start ${argv.l}`);
   });
 
 new ucmd("download", "url", "filename")
