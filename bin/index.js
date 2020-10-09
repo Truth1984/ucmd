@@ -933,6 +933,7 @@ new ucmd("helper")
       { arg: "n", describe: "name" },
       { arg: "e", describe: "edit with code", boolean: true },
       { arg: "s", describe: "software needs to be preinstalled" },
+      { arg: "u", describe: "update package", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -943,6 +944,7 @@ new ucmd("helper")
         tools: `wget -O - https://truth1984.github.io/testSites/s/tools.sh | bash`,
         desktop: `wget -O - https://truth1984.github.io/testSites/s/desktop.sh | bash`,
       });
+    if (argv.u) return cmd(`cd ~/Documents/ucmd && git pull && npm i`);
     let list = {
       screen: {
         "run in detached mode": "screen -dmS $name $cmd",
