@@ -211,7 +211,7 @@ new ucmd("sysinfo")
   })
   .perform((argv) => {
     if (argv.f) return cmd("stat " + argv.f);
-    if (argv.d) return cmd("ls -alF");
+    if (argv.d) return cmd("ls -alFh");
     if (argv.h) return cmd("df -h");
     if (argv.l) return cmd("du -ahx . | sort -rh | head -" + Number.parseInt(argv.l) ? argv.l : 20);
     console.log({
