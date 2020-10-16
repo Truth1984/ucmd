@@ -212,7 +212,7 @@ new ucmd("sysinfo")
   .perform((argv) => {
     if (argv.f) return cmd("stat " + argv.f);
     if (argv.d) return cmd("ls -alFh");
-    if (argv.h) return cmd("df -h");
+    if (argv.h) return cmd("df -Th");
     if (argv.l) return cmd("du -ahx . | sort -rh | head -" + Number.parseInt(argv.l) ? argv.l : 20);
     console.log({
       hostname: os.hostname(),
@@ -221,6 +221,39 @@ new ucmd("sysinfo")
       username: os.userInfo().username,
     });
     cmd("cat /etc/os-release");
+  });
+
+new ucmd("mount", "target")
+  .describer({
+    main: "mount or unmount a device",
+    options: [
+      { arg: "m", describe: "mount target" },
+      { arg: "u", describe: "unmount target" },
+      { arg: "i", describe: "information of mounting" },
+      { arg: "I", describe: "unmounted information" },
+    ],
+  })
+  .perform((argv) => {
+    let findUnmount = () => {
+      let list = cmd(`lsblk --noheadings --raw -o NAME,MOUNTPOINT | awk '$1~/[[:digit:]]/ && $2 == ""'`, false, true);
+      return u
+        .stringToArray(list, "\n")
+        .map((i) => i.trim())
+        .filter((i) => i != "");
+    };
+    if (argv.m) return cmd(`udisksctl mount -b ${argv.m}`, true);
+    if (argv.u) return cmd(`udisksctl unmount -b ${argv.u}`, true);
+
+    if (argv.i && argv.i != true) return cmd(`sudo fdisk -l ${argv.i}`);
+    if (argv.i)
+      cmd(
+        `sudo fdisk -l && df -Th && echo -e "\nunmounted:" && lsblk --noheadings --raw -o NAME,MOUNTPOINT | awk '$1~/[[:digit:]]/ && $2 == ""'`
+      );
+    if (argv.I) {
+      let list = findUnmount();
+      if (u.len(list) == 0) return console.log("there is no unmounted device");
+      for (let i of list) cmd(`stat /dev/${i}`);
+    }
   });
 
 new ucmd("ssh", "address", "username")
