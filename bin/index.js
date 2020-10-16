@@ -225,7 +225,7 @@ new ucmd("sysinfo")
 
 new ucmd("mount", "target")
   .describer({
-    main: "mount or unmount a device",
+    main: "mount or unmount a device, use `mkfs.ext4 /dev/target` to change type",
     options: [
       { arg: "m", describe: "mount target" },
       { arg: "u", describe: "unmount target" },
