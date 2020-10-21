@@ -454,7 +454,7 @@ new ucmd("service", "name")
       return multiSelect(target, undefined, undefined, quitOnUdf);
     };
 
-    let targetService = (await fuzzy(argv.n))[0];
+    let targetService = await fuzzy(argv.n);
 
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
     if (argv.i) return cmd(`sudo systemctl list-units --type service -a --state=inactive`);
