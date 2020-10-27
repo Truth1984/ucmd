@@ -1026,6 +1026,7 @@ new ucmd("helper")
         mkdir: "mkdir -p",
         currentFolder: '"${PWD##*/}"',
         fullOutput: "2>&1",
+        killProcessAfter: "timeout $xSec $cmd",
       },
     };
     if (argv.n) console.log(list[argv.n]);
