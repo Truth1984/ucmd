@@ -1024,6 +1024,7 @@ new ucmd("helper")
         scriptDir: 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"',
         shEcho: "sh -c 'echo 0'",
         mkdir: "mkdir -p",
+        currentFolder: '"${PWD##*/}"',
         fullOutput: "2>&1",
       },
     };
