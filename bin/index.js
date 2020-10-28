@@ -905,6 +905,7 @@ new ucmd("install", "name")
     if (argv.c) {
       if (platform == "apt") return cmd(`sudo apt-get clean`);
       if (platform == "yum") return cmd(`sudo yum clean all`);
+      if (platform == "brew") return cmd(`sudo brew cleanup`);
     }
   });
 
@@ -915,6 +916,29 @@ new ucmd("eval", "line")
   })
   .perform((argv) => {
     console.log(eval(argv.l));
+  });
+
+new ucmd("result", "cmd")
+  .describer({
+    main: "parse command result into js object, as string | array | json",
+    options: [
+      { arg: "C", describe: "command to run" },
+      { arg: "c", describe: "columns NO. to be selected from, like 1,4,5" },
+      { arg: "f", describe: "full output as 2>&1", boolean: true },
+      { arg: "h", describe: "head to skip by number of lines" },
+      { arg: "t", describe: "tail to skip by number of lines" },
+    ],
+  })
+  .perform((argv) => {
+    let command = argv.C;
+    if (argv.f) command += " 2>&1";
+    if (argv.h) command += ` | head -n ${argv.h}`;
+    if (argv.t) command += ` | tail -n ${argv.t}`;
+    if (argv.c) command += ` | awk '{print $${u.stringReplace(argv.c, { ",": ',"||",$' }, false)}}'`;
+    let result = cmd(command, false, true);
+    if (u.contains(result, "||")) result = shellParser(result, { separator: "||" });
+    else result = shellParser(result);
+    console.log(result);
   });
 
 new ucmd("exist", "path")
