@@ -171,7 +171,12 @@ new ucmd("search", "target", "basedir")
       { arg: "d", describe: "directory only", boolean: true },
       { arg: "f", describe: "file only", boolean: true },
       { arg: "D", describe: "subdirectory Depth", default: 3 },
-      // { arg: "T", describe: "stat file, use {+:out,-:in} and u.timeAdd to filter out file" },
+      {
+        arg: "T",
+        describe:
+          "stat file condition with js, {mtime: content, ctime: content + location or permission, atime: access, readtime} \
+        like: 'u.timeAdd({day:-1}) < mtime && u.timeAdd({day:-3}) > atime'",
+      },
       { arg: "c", describe: "command operation to perform, replace dir with $1" },
     ],
   })
@@ -202,6 +207,13 @@ new ucmd("search", "target", "basedir")
       for (let i of nameArr)
         if (u.stringToRegex(target).test(i.basename) && (i.dirent.isDirectory() ? directoryOnly : fileOnly))
           result.push(i);
+    }
+
+    if (argv.T) {
+      result = result.filter((i) => {
+        let { atime, ctime, mtime } = fs.lstatSync(i.fullPath);
+        return eval(argv.T);
+      });
     }
 
     if (argv.o) {
