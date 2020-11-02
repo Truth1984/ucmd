@@ -320,9 +320,16 @@ new ucmd("gitclone", "name", "user")
       { arg: "n", describe: "name of the project" },
       { arg: "u", describe: "username", default: "Truth1984" },
       { arg: "d", describe: "destination of download" },
+      { arg: "i", describe: "initialize for js project" },
     ],
   })
   .perform((argv) => {
+    if (argv.i) {
+      if (!fs.existsSync(".git")) {
+        return console.log("Error: git folder not found");
+      }
+      return cmd(`cp -a $DIR/gitfile/. ./`);
+    }
     let user = argv.u;
     let project = argv.n;
     let dest = argv.d ? argv.d : `~/Documents/${project}`;

@@ -14,3 +14,7 @@ new ucmd("_author").perform(() => console.log("Awada.Z"));
 new ucmd("_ask").describer({ main: "asking test" }).perform((argv) => {
   cmdq({ "what is your name": false, "your password": true }).then(console.log);
 });
+
+new ucmd("_do", "task")
+  .describer({ main: "pipe task", options: [{ arg: "t", describe: "task to pipe" }] })
+  .perform((argv) => cmd(argv.t));
