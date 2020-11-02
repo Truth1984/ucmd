@@ -167,9 +167,12 @@ new ucmd("search", "target", "basedir")
       { arg: "b", describe: "base directory of the file" },
       { arg: "i", describe: "Ignore directory like ['!log'], Include like ['*_log']", default: ["!.git", "!*modules"] },
       { arg: "I", describe: "Ignore files like ['!.git'], Include like ['*.js']" },
+      { arg: "a", describe: "output result as an array", boolean: true },
       { arg: "d", describe: "directory only", boolean: true },
       { arg: "f", describe: "file only", boolean: true },
-      { arg: "s", describe: "subdirectory depth", default: 3 },
+      { arg: "D", describe: "subdirectory Depth", default: 3 },
+      // { arg: "T", describe: "stat file, use {+:out,-:in} and u.timeAdd to filter out file" },
+      { arg: "c", describe: "command operation to perform, replace dir with $1" },
     ],
   })
   .perform(async (argv) => {
@@ -180,7 +183,7 @@ new ucmd("search", "target", "basedir")
     let fileIgnores = argv.I;
     let directoryOnly = argv.d;
     let fileOnly = argv.f;
-    let depth = argv.s;
+    let depth = argv.D;
 
     let options = {
       type: "files_directories",
@@ -190,13 +193,23 @@ new ucmd("search", "target", "basedir")
 
     if (argv.I) options = u.mapMerge(options, { fileFilter: fileIgnores });
     let nameArr = await read.promise(basedir, options);
+
+    let result = [];
+
     if (!directoryOnly && !fileOnly) {
-      for (let i of nameArr) if (u.contains(i.basename, target)) console.log(i);
+      for (let i of nameArr) if (u.contains(i.basename, target)) result.push(i);
     } else {
       for (let i of nameArr)
         if (u.stringToRegex(target).test(i.basename) && (i.dirent.isDirectory() ? directoryOnly : fileOnly))
-          console.log(i);
+          result.push(i);
     }
+
+    if (argv.o) {
+      return result.map((i) => cmd(u.stringReplace(argv.o, { "\\$1": i.fullPath }), true));
+    }
+
+    if (argv.a) console.log(result.map((i) => i.fullPath));
+    else console.log(result);
   });
 
 new ucmd("sysinfo")
@@ -454,28 +467,26 @@ new ucmd("service", "name")
       return multiSelect(target, undefined, undefined, quitOnUdf);
     };
 
-    let targetService = await fuzzy(argv.n);
-
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
     if (argv.i) return cmd(`sudo systemctl list-units --type service -a --state=inactive`);
-    if (argv.n) return cmd(`sudo systemctl status ${targetService}`);
+    if (argv.n) return cmd(`sudo systemctl status ${await fuzzy(argv.n)}`);
 
     if (argv.e) {
-      let target = await fuzzy(argv.n, false);
+      let target = await fuzzy(argv.e, false);
       if (target.length == 0) target = argv.e;
       cmd(`sudo systemctl start ${target} && sudo systemctl enable ${target}`, true);
       return cmd(`sudo service ${target} status`);
     }
 
     if (argv.d) {
-      let target = targetService;
+      let target = await fuzzy(argv.d);
       return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
         if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
         cmd(`sudo service ${target} status`);
       });
     }
 
-    if (argv.r) return cmd(`sudo systemctl restart ${targetService}`);
+    if (argv.r) return cmd(`sudo systemctl restart ${await fuzzy(argv.r)}`);
 
     cmd(`sudo systemctl list-units --type service --all`);
   });
