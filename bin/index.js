@@ -211,6 +211,7 @@ new ucmd("search", "target", "basedir")
 
     if (argv.T) {
       result = result.filter((i) => {
+        // eslint-disable-next-line no-unused-vars
         let { atime, ctime, mtime } = fs.lstatSync(i.fullPath);
         return eval(argv.T);
       });
