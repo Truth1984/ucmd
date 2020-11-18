@@ -239,7 +239,7 @@ new ucmd("sysinfo")
     if (argv.f) return cmd("stat " + argv.f);
     if (argv.d) return cmd("ls -alFh");
     if (argv.h) return cmd("df -Th");
-    if (argv.l) return cmd("du -ahx . | sort -rh | head -" + Number.parseInt(argv.l) ? argv.l : 20);
+    if (argv.l) return cmd("du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
     console.log({
       hostname: os.hostname(),
       platform: os.platform(),
