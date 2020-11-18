@@ -11,3 +11,7 @@ one line : `npm run build`
 ### example
 
 `u port 3000`
+
+### ffmpeg
+
+u install ffmpeg
