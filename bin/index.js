@@ -282,12 +282,13 @@ new ucmd("mount", "target")
     }
   });
 
-new ucmd("ssh", "address", "username")
+new ucmd("ssh", "address", "username", "port")
   .describer({
     main: "use keygen to generate key pairs",
     options: [
       { arg: "a", describe: "address" },
-      { arg: "u", describe: "username of the host", default: os.userInfo().username },
+      { arg: "u", describe: "username of the host", default: "root" },
+      { arg: "p", describe: "port for ssh", default: 22 },
       { arg: "n", describe: "name of alias" },
       { arg: "r", describe: "refresh keygen token", boolean: true },
     ],
@@ -296,10 +297,9 @@ new ucmd("ssh", "address", "username")
     let keygen = "ssh-keygen -t rsa -b 4096";
     if (argv.r) cmd(keygen);
     cmd(`if ! [ -f $HOME/.ssh/id_rsa ]; then ${keygen}; fi;`);
-    let finalAddress = argv.a;
-    if (argv.a.toString().indexOf("@") == -1) finalAddress = argv.u + "@" + argv.a;
-    cmd("ssh-copy-id -i ~/.ssh/id_rsa.pub " + finalAddress);
-    if (argv.n) cmd(`u quick ssh${argv.n} "ssh ${finalAddress}"`);
+
+    cmd(`ssh-copy-id -i ~/.ssh/id_rsa.pub -p ${argv.p} ${argv.u}@${argv.a}`);
+    if (argv.n) cmd(`u quick ssh${argv.n} "ssh -p ${argv.p} ${argv.u}@${argv.a}"`);
   });
 
 new ucmd("process", "name")
@@ -1082,6 +1082,10 @@ new ucmd("helper")
         currentFolder: '"${PWD##*/}"',
         fullOutput: "2>&1",
         killProcessAfter: "timeout $xSec $cmd",
+      },
+      ssh: {
+        config: "nano /etc/ssh/sshd_config",
+        restart: "u service -r=ssh",
       },
     };
     if (argv.n) console.log(list[argv.n]);
