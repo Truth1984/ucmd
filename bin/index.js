@@ -1087,6 +1087,11 @@ new ucmd("helper")
         config: "nano /etc/ssh/sshd_config",
         restart: "u service -r=ssh",
       },
+
+      backup: {
+        script:
+          'sudo rsync -aAXv / --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"} /dest',
+      },
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);
