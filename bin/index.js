@@ -225,28 +225,22 @@ new ucmd("search", "target", "basedir")
     else console.log(result);
   });
 
-new ucmd("sysinfo")
+new ucmd("sysinfo", "target")
   .describer({
     main: "display system information",
     options: [
-      { arg: "f", describe: "file information" },
-      { arg: "d", describe: "directory information", boolean: true },
+      { arg: "t", describe: "target", default: "." },
+      { arg: "s", describe: "size of file" },
       { arg: "h", describe: "hardware information", boolean: true },
       { arg: "l", describe: "large file on this directory" },
     ],
   })
   .perform((argv) => {
-    if (argv.f) return cmd("stat " + argv.f);
-    if (argv.d) return cmd("ls -alFh");
+    if (argv.s) return cmd(`du -sh ${argv.s}`);
     if (argv.h) return cmd("df -Th");
     if (argv.l) return cmd("du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
-    console.log({
-      hostname: os.hostname(),
-      platform: os.platform(),
-      arch: os.arch(),
-      username: os.userInfo().username,
-    });
-    cmd("cat /etc/os-release");
+    if (fs.lstatSync(argv.t).isDirectory()) return cmd(`cd ${argv.t} && ls -alFh`);
+    else return cmd(`stat ${argv.f}`);
   });
 
 new ucmd("mount", "target")
@@ -991,9 +985,9 @@ new ucmd("exist", "path")
 
 new ucmd("dep")
   .describer({
-    main: "depdency repo modify",
+    main: "dependency repo modify",
     options: [
-      { arg: "l", describe: "list depencies", boolean: true },
+      { arg: "l", describe: "list dependencies", boolean: true },
       { arg: "r", describe: "remove target depencies" },
     ],
   })
@@ -1012,6 +1006,38 @@ new ucmd("dep")
         cmd(`sudo rm -rf ${target}`);
       });
     }
+  });
+
+new ucmd("os", "is")
+  .describer({
+    main: "find your os name",
+    options: [
+      { arg: "i", describe: "is it ... ? can be win | linux | mac | centos ..." },
+      { arg: "v", describe: "find versions", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.i) {
+      if (argv.i == "win") return console.log(os.platform() == "win32");
+      if (argv.i == "linux") return console.log(os.platform() == "linux");
+      if (argv.i == "mac") return console.log(os.platform() == "darwin");
+      if (os.platform() != "linux") throw "system is not linux based";
+
+      let content = fs.readFileSync("/etc/os-release").toString().toLowerCase();
+      return console.log(u.contains(content, argv.i));
+    }
+    if (argv.v) {
+      let ask = (sys) => cmd(`u os ${sys}`, false, true).trim() == "true";
+      if (ask("linux")) cmd("uname -r");
+      if (ask("win")) console.log(os.version());
+      if (ask("mac")) cmd("sw_vers -productVersion");
+    }
+    console.log({
+      hostname: os.hostname(),
+      platform: os.platform(),
+      arch: os.arch(),
+      username: os.userInfo().username,
+    });
   });
 
 new ucmd("helper")
@@ -1050,6 +1076,7 @@ new ucmd("helper")
       crontab: {
         edit: "sudo crontab -e",
         "run command on reboot": "@reboot CMD",
+        web: "https://crontab.guru/",
         "At every 5th minute": "*/5 * * * *",
         "day 1, 3, 4, 5": "0 0 1,3-5 * *",
         order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
