@@ -1122,6 +1122,7 @@ new ucmd("helper")
       backup: {
         script:
           'sudo rsync -aAXv / --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"} /dest',
+        transfer: "rsync -avuzh /source/path/ user@host:/destination/path",
       },
     };
     if (argv.n) console.log(list[argv.n]);
