@@ -41,6 +41,10 @@ let getTime = () => {
   };
 };
 
+let checkOS = (name) => {
+  return cmd(`u os ${name}`, false, true).trim() == "true";
+};
+
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
@@ -1027,10 +1031,9 @@ new ucmd("os", "is")
       return console.log(u.contains(content, argv.i));
     }
     if (argv.v) {
-      let ask = (sys) => cmd(`u os ${sys}`, false, true).trim() == "true";
-      if (ask("linux")) cmd("uname -r");
-      if (ask("win")) console.log(os.version());
-      if (ask("mac")) cmd("sw_vers -productVersion");
+      if (checkOS("linux")) return cmd("uname -r");
+      if (checkOS("win")) return console.log(os.version());
+      if (checkOS("mac")) return cmd("sw_vers -productVersion");
     }
     console.log({
       hostname: os.hostname(),
