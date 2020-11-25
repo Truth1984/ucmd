@@ -1051,14 +1051,15 @@ new ucmd("helper")
     ],
   })
   .perform((argv) => {
-    if (argv.e) return cmd("code ~/Documents/ucmd");
+    let projectPath = __dirname + "/../";
+    if (argv.e) return cmd("code " + projectPath);
     if (argv.s)
       return console.log({
         prescript: `wget -O - https://truth1984.github.io/testSites/s/prescript.sh | bash`,
         tools: `wget -O - https://truth1984.github.io/testSites/s/tools.sh | bash`,
         desktop: `wget -O - https://truth1984.github.io/testSites/s/desktop.sh | bash`,
       });
-    if (argv.u) return cmd(`cd ~/Documents/ucmd && git pull && npm i`);
+    if (argv.u) return cmd(`cd ${projectPath} && git pull && npm i`);
     let list = {
       screen: {
         "run in detached mode": "screen -dmS $name $cmd",
