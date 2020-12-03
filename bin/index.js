@@ -880,7 +880,8 @@ new ucmd("usermod", "group", "user")
 
 new ucmd("link", "name")
   .describer({
-    main: "link(ln) particular command to target user group, solve command not found issue",
+    main:
+      "link(ln) particular command to target user group, solve command not found issue, if command already exist, use $chmod",
     options: [
       { arg: "n", describe: "name of the command" },
       { arg: "u", describe: "user to use", default: "root" },
