@@ -280,13 +280,11 @@ new ucmd("mount", "target")
     }
   });
 
-new ucmd("ssh", "address", "username", "port")
+new ucmd("ssh", "address")
   .describer({
     main: "use keygen to generate key pairs",
     options: [
-      { arg: "a", describe: "address" },
-      { arg: "u", describe: "username of the host", default: "root" },
-      { arg: "p", describe: "port for ssh", default: 22 },
+      { arg: "a", describe: "address, like root@localhost:22" },
       { arg: "n", describe: "name of alias" },
       { arg: "r", describe: "refresh keygen token", boolean: true },
     ],
@@ -296,8 +294,25 @@ new ucmd("ssh", "address", "username", "port")
     if (argv.r) cmd(keygen);
     cmd(`if ! [ -f $HOME/.ssh/id_rsa ]; then ${keygen}; fi;`);
 
-    cmd(`ssh-copy-id -i ~/.ssh/id_rsa.pub -p ${argv.p} ${argv.u}@${argv.a}`);
-    if (argv.n) cmd(`u quick ssh${argv.n} "ssh -p ${argv.p} ${argv.u}@${argv.a}"`);
+    let name = "root";
+    let addr = "";
+    let port = 22;
+    if (u.contains(argv.a, "@") && u.contains(argv.a, ":")) {
+      name = u.refind(argv.a, u.regexBetweenOut("^", "@"));
+      addr = u.refind(argv.a, u.regexBetweenOut("@", ":"));
+      port = u.refind(argv.a, u.regexBetweenOut(":", "$"));
+    } else if (u.contains(argv.a, "@")) {
+      name = u.refind(argv.a, u.regexBetweenOut("^", "@"));
+      addr = u.refind(argv.a, u.regexBetweenOut("@", "$"));
+    } else if (u.contains(argv.a, ":")) {
+      addr = u.refind(argv.a, u.regexBetweenOut("^", ":"));
+      port = u.refind(argv.a, u.regexBetweenOut(":", "$"));
+    } else {
+      addr = argv.a;
+    }
+
+    cmd(`ssh-copy-id -i ~/.ssh/id_rsa.pub -p ${port} ${name}@${addr}`);
+    if (argv.n) cmd(`u quick ssh${argv.n} "ssh -p ${port} ${name}@${addr}"`);
   });
 
 new ucmd("process", "name")
