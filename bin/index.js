@@ -546,8 +546,8 @@ new ucmd("retry", "cmd")
         () => {
           let result = cmd(argv.c, false, true, true);
           if (result.status > 0) {
-            console.log(u.stringReplace(result.stderr.toString(), { "\\n": "" }));
-            console.log("redoing ...", argv.c);
+            console.log("retry ...", argv.c);
+            console.log(result.stderr.toString().trim());
             return Promise.reject();
           } else {
             return console.log(u.stringReplace(result.stdout.toString().trim()));
