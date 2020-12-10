@@ -541,6 +541,7 @@ new ucmd("retry", "cmd")
     ],
   })
   .perform(async (argv) => {
+    // [ $? -eq 0 ] && echo "$cmd command was successful" || echo "$cmd failed"
     await u
       .promiseTryTimes(
         () => {
