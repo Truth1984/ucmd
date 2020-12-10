@@ -11,6 +11,7 @@ var read = require("readdirp");
 var paths = require("path");
 var shellParser = require("../helper/shell-parser");
 var iniParser = require("ini");
+var yamlParser = require("yamljs");
 var u = require("awadau");
 var multiSelect = require("../helper/multiSelect");
 require("./test");
@@ -589,20 +590,29 @@ new ucmd("dc")
       { arg: "d", describe: "down, and remove orphan", boolean: true },
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
-      { arg: "a", describe: "all display", boolean: true },
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
-      { arg: "L", describe: "live log", default: "" },
-      { arg: "l", describe: "logs service", default: "" },
+      { arg: "L", describe: "live log" },
+      { arg: "l", describe: "logs service" },
     ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
     if (argv.u) return cmd("sudo docker-compose up -d");
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
     if (argv.i) return cmd("sudo docker-compose images");
     if (argv.p) return cmd("sudo docker-compose ps" + (argv.a ? " -a" : ""));
     if (argv.r) return cmd("sudo docker-compose rm -s");
-    if (argv.l) return cmd("sudo docker-compose logs " + argv.l);
-    if (argv.L) return cmd(`sudo docker-compose logs -f ${argv.L}`);
+    let loadKeys = () => {
+      let yobj = yamlParser.load("docker-compose.yml");
+      return multiSelect(u.mapKeys(yobj.services));
+    };
+    if (argv.l) {
+      if (argv.l === true) argv.l = await loadKeys();
+      return cmd("sudo docker-compose logs " + argv.l);
+    }
+    if (argv.L) {
+      if (argv.L === true) argv.L = await loadKeys();
+      return cmd(`sudo docker-compose logs -f ${argv.L}`);
+    }
   });
 
 new ucmd("post", "url", "data")
