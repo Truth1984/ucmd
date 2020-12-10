@@ -1179,6 +1179,16 @@ new ucmd("helper")
           'sudo rsync -aAXv / --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"} /dest',
         transfer: "rsync --progress -avuzh user@host:/source/path/copyfrom user@host:/destination/path/dumpto",
       },
+      hostname: {
+        view: "hostnamectl",
+        edit: "hostnamectl set-hostname ",
+      },
+      pw: {
+        change: "sudo passwd",
+        changeUser: "sudo passwd $user",
+        changeGroup: "sudo passwd -g $group",
+        expire: "sudo passwd -e $user",
+      },
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);
