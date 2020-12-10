@@ -1,6 +1,6 @@
 {
   "name": "ucmd",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "quick bash cmd alias",
   "main": "./bin/index.js",
   "scripts": {

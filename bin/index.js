@@ -531,6 +531,34 @@ new ucmd("hash", "target")
     if (argv.s) return cmd(`echo -n ${argv.s} | md5sum`);
   });
 
+new ucmd("retry", "cmd")
+  .describer({
+    main: "retry the command if failed",
+    options: [
+      { arg: "c", describe: "command" },
+      { arg: "t", describe: "times to repeat", default: 3 },
+      { arg: "i", describe: "interval to try in second", default: 2 },
+    ],
+  })
+  .perform(async (argv) => {
+    await u
+      .promiseTryTimes(
+        () => {
+          let result = cmd(argv.c, false, true, true);
+          if (result.status > 0) {
+            console.log(u.stringReplace(result.stderr.toString(), { "\\n": "" }));
+            console.log("redoing ...", argv.c);
+            return Promise.reject();
+          } else {
+            return console.log(u.stringReplace(result.stdout.toString().trim()));
+          }
+        },
+        argv.t,
+        argv.i
+      )
+      .catch(() => cmd("exit 1"));
+  });
+
 new ucmd("docker")
   .describer({
     main: "docker additional command",
