@@ -620,6 +620,7 @@ new ucmd("dc")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
+      { arg: "e", describe: "execute bash command" },
       { arg: "L", describe: "live log" },
       { arg: "l", describe: "logs service" },
     ],
@@ -634,6 +635,10 @@ new ucmd("dc")
       let yobj = yamlParser.load("docker-compose.yml");
       return multiSelect(u.mapKeys(yobj.services));
     };
+    if (argv.e) {
+      if (argv.e === true) argv.e = await loadKeys();
+      return cmd(`sudo docker-compose exec --privileged ${argv.e} /bin/bash`);
+    }
     if (argv.l) {
       if (argv.l === true) argv.l = await loadKeys();
       return cmd("sudo docker-compose logs " + argv.l);
