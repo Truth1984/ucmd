@@ -21,6 +21,9 @@ let parseJson = (string, tostring = true) => {
   return eval("(" + string + ")");
 };
 
+/**
+ * return file path
+ */
 let fileExistProcess = (file) => {
   file = file.replace("~", process.env.HOME);
   if (!fs.existsSync(file)) {
@@ -746,24 +749,15 @@ new ucmd("replace", "filename", "old", "new")
       { arg: "n", describe: "new string" },
       { arg: "g", describe: "global /g", boolean: true },
       { arg: "t", describe: "test the result", boolean: true },
-      { arg: "d", describe: "self defined delimiter", default: "/" },
     ],
   })
   .perform((argv) => {
-    if (!argv.f || !argv.o || !argv.n) return console.log("missing parameters, file - old - new");
-    let delimiterArr = ["@", "#", "&", "%", "|", "^", "(", "-", "=", "+", "[", "{", ":", "_", "<", "~", "*", "\\"];
-    let dlm;
-    for (let i of [argv.d, ...delimiterArr]) {
-      if (argv.o.indexOf(i) == -1 && argv.n.indexOf(i) == -1) {
-        dlm = i;
-        break;
-      }
-    }
-    if (dlm == undefined) return console.log("delimiter can't be used");
-    let line = `sudo sed ${argv.t ? "" : "-i"} 's${dlm}${argv.o}${dlm}${argv.n}${dlm}${argv.g ? dlm + "g" : ""}' ${
-      argv.f
-    }`;
-    cmd(line);
+    let path = fileExistProcess(argv.f);
+    let content = fs.readFileSync(path).toString();
+    let processed = u.stringReplace(content, { [argv.o]: argv.n }, true, argv.t);
+
+    if (argv.t) return console.log(processed);
+    return fs.writeFileSync(path, processed);
   });
 
 new ucmd("pkgjson", "name", "script")
