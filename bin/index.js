@@ -1106,6 +1106,8 @@ new ucmd("os", "is")
       if (argv.i == "win") return console.log(os.platform() == "win32");
       if (argv.i == "linux") return console.log(os.platform() == "linux");
       if (argv.i == "mac") return console.log(os.platform() == "darwin");
+      if (u.contains(["apt", "rpm", "deb", "yum", "dnf"], argv.i))
+        return console.log(cmd(`command -v ${argv.i}`, 0, 1, 1).status == 0);
       if (os.platform() != "linux") throw "system is not linux based";
 
       let content = fs.readFileSync("/etc/os-release").toString().toLowerCase();
