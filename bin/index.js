@@ -414,6 +414,27 @@ echo $var;
     console.log("further modify:", scriptLocation);
   });
 
+new ucmd("screen", "cmd", "name")
+  .describer({
+    main: "start a screen command",
+    options: [
+      { arg: "c", describe: "command to run in screen" },
+      { arg: "n", describe: "name of the command" },
+      { arg: "r", describe: "reattach to pid" },
+      { arg: "k", describe: "kill target screen process" },
+      { arg: "l", describe: "show list of screen", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.c) {
+      if (argv.n) return cmd(`sudo screen -dmS ${argv.n} ${argv.c}`);
+      return cmd(`sudo screen -dm bash -c ${argv.c}`);
+    }
+    if (argv.r) return cmd(`sudo screen -r ${argv.r === true ? "" : argv.r}`);
+    if (argv.k) return cmd(`sudo screen -X -S ${argv.k} quit`);
+    if (argv.l) return cmd("sudo screen -list");
+  });
+
 new ucmd("addPath", "name", "value")
   .describer({
     main: "add path variable to ~/.bash_mine",
@@ -1124,11 +1145,6 @@ new ucmd("helper")
       });
     if (argv.u) return cmd(`cd ${projectPath} && git pull && npm i`);
     let list = {
-      screen: {
-        "run in detached mode": "screen -dmS $name $cmd",
-        "kill session": "ctrl + a + k",
-        "show list of screens": "ls -laR /var/run/screen/",
-      },
       git: {
         "branch create": "git branch $name",
         "branch ls": "git branch",
