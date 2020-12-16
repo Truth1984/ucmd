@@ -601,6 +601,7 @@ new ucmd("docker")
       { arg: "S", describe: "start the container" },
       { arg: "l", describe: "logs path of container" },
       { arg: "L", describe: "live log" },
+      { arg: "v", describe: "volume listing" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "remove container" },
       { arg: "R", describe: "remove container and its volume" },
@@ -618,6 +619,7 @@ new ucmd("docker")
     if (argv.S) cmd(`sudo docker container start ${argv.S}`);
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
+    if (argv.v) cmd(`sudo docker volume ls`);
     if (argv.e)
       cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} /bin/bash`);
     if (argv.E) cmd(`sudo docker exec -it ${argv.E} /bin/bash`);
