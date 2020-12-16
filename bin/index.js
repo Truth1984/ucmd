@@ -504,15 +504,17 @@ new ucmd("service", "name")
     main: "list all the service",
     options: [
       { arg: "n", describe: "name of the service, check stauts" },
-      { arg: "e", describe: "enable a service" },
+      { arg: "e", describe: "enable a service, and start" },
       { arg: "d", describe: "disable a service" },
       { arg: "r", describe: "restart service" },
+      { arg: "A", describe: "absolute name, skip name filtering", boolean: true },
       { arg: "a", describe: "active process", boolean: true },
       { arg: "i", describe: "inactive process", boolean: true },
     ],
   })
   .perform(async (argv) => {
     let fuzzy = (name, quitOnUdf = true) => {
+      if (argv.A) return name;
       let jsonresult = cmd(`u json -j "systemctl list-units --type service -a | cat"`, false, true);
       let services = u
         .stringToJson(jsonresult)
@@ -533,6 +535,7 @@ new ucmd("service", "name")
       let target = await fuzzy(argv.e, false);
       if (target.length == 0) target = argv.e;
       cmd(`sudo systemctl start ${target} && sudo systemctl enable ${target}`, true);
+      if (argv.A) return;
       return cmd(`sudo service ${target} status`);
     }
 
@@ -540,12 +543,12 @@ new ucmd("service", "name")
       let target = await fuzzy(argv.d);
       return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
         if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
+        if (argv.A) return;
         cmd(`sudo service ${target} status`);
       });
     }
 
     if (argv.r) return cmd(`sudo systemctl restart ${await fuzzy(argv.r)}`);
-
     cmd(`sudo systemctl list-units --type service --all`);
   });
 
