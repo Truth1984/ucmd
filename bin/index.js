@@ -752,6 +752,8 @@ new ucmd("replace", "filename", "old", "new")
       { arg: "f", describe: "filename" },
       { arg: "o", describe: "old string" },
       { arg: "n", describe: "new string" },
+      { arg: "h", describe: "if the file contains this string" },
+      { arg: "r", describe: "regex match the file" },
       { arg: "g", describe: "global /g", boolean: true },
       { arg: "t", describe: "test the result", boolean: true },
     ],
@@ -759,6 +761,10 @@ new ucmd("replace", "filename", "old", "new")
   .perform((argv) => {
     let path = fileExistProcess(argv.f);
     let content = fs.readFileSync(path).toString();
+
+    if (argv.h) return console.log(u.contains(content, argv.h));
+    if (argv.r) return console.log(new RegExp(argv.r).test(content));
+
     let processed = u.stringReplace(content, { [argv.o]: argv.n }, true, argv.t);
 
     if (argv.t) return console.log(processed);
