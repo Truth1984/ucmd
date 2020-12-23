@@ -777,6 +777,7 @@ new ucmd("pkgjson", "name", "script")
     options: [
       { arg: "n", describe: "name of the script" },
       { arg: "s", describe: "script to add or replace" },
+      { arg: "h", describe: "has this script ?" },
       { arg: "l", describe: "list all the commands", boolean: true },
     ],
   })
@@ -785,6 +786,7 @@ new ucmd("pkgjson", "name", "script")
     if (!fs.existsSync(path)) path = "../package.json";
     if (!fs.existsSync(path)) return console.error("Error: package.json file does not exist");
     let data = JSON.parse(fs.readFileSync(path).toString());
+    if (argv.h) return console.log(data["scripts"][argv.h] != undefined);
     if (argv.l) return console.log(data["scripts"]);
     if (argv.s == undefined) return console.log(data["scripts"][argv.s]);
     data["scripts"][argv.n] = argv.s;
