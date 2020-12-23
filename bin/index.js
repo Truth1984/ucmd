@@ -349,16 +349,21 @@ new ucmd("gitclone", "name", "user")
     options: [
       { arg: "n", describe: "name of the project" },
       { arg: "u", describe: "username", default: "Truth1984" },
+      { arg: "D", describe: "dockerize node project", boolean: true },
       { arg: "d", describe: "destination of download" },
       { arg: "i", describe: "initialize for js project" },
     ],
   })
   .perform((argv) => {
     if (argv.i) {
-      if (!fs.existsSync(".git")) {
-        return console.log("Error: git folder not found");
-      }
+      if (!fs.existsSync(".git")) return console.log("Error: git folder not found");
+
       return cmd(`cp -a $DIR/gitfile/. ./`);
+    }
+
+    if (argv.D) {
+      if (!fs.existsSync("package.json")) return console.log("Error: package.json not found");
+      return cmd(`bash <(curl -s https://truth1984.github.io/testSites/node/prep.sh)`);
     }
     let user = argv.u;
     let project = argv.n;
