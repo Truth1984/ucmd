@@ -758,7 +758,7 @@ new ucmd("replace", "filename", "old", "new")
       { arg: "o", describe: "old string" },
       { arg: "n", describe: "new string" },
       { arg: "h", describe: "if the file contains this string" },
-      { arg: "r", describe: "regex match the file" },
+      { arg: "r", describe: "regex test the file" },
       { arg: "g", describe: "global /g", boolean: true },
       { arg: "t", describe: "test the result", boolean: true },
     ],
