@@ -803,6 +803,7 @@ new ucmd("json", "cmd")
     main: "parse result to json",
     options: [
       { arg: "c", describe: "command result to json" },
+      { arg: "p", describe: "parse file, as a location" },
       { arg: "s", describe: "separator of the result", default: " " },
       { arg: "l", describe: "line to skip", default: 0 },
       { arg: "k", describe: "key path to get from json, e.g: a,b,c" },
@@ -811,6 +812,7 @@ new ucmd("json", "cmd")
     ],
   })
   .perform((argv) => {
+    if (argv.p) argv.c = `cat ${argv.p}`;
     let result =
       u._parseJsonCheck(cmd(argv.c, false, true)) == null
         ? shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l })
@@ -1037,7 +1039,7 @@ new ucmd("eval", "line")
     options: [{ arg: "l", describe: "line to eval" }],
   })
   .perform((argv) => {
-    console.log(eval(argv.l));
+    console.log(eval("(" + argv.l + ")"));
   });
 
 new ucmd("result", "cmd")
