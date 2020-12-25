@@ -600,7 +600,7 @@ new ucmd("docker")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "a", describe: "all display", boolean: true },
-      { arg: "b", describe: "build dockerfile with result name, as $targetName,$sourcefile" },
+      { arg: "b", describe: "build dockerfile with result name, as $targetName:version,$sourcefile" },
       { arg: "o", describe: "docker find port" },
       { arg: "s", describe: "stop the container" },
       { arg: "S", describe: "start the container" },
@@ -630,7 +630,11 @@ new ucmd("docker")
     if (argv.E) cmd(`sudo docker exec -it ${argv.E} /bin/bash`);
     if (argv.b) {
       argv.b = u.stringToArray(argv.b, ",");
-      cmd(`sudo docker image build -t ${argv.b[0]} ${argv.b[1] ? "-f " + argv.b[1] : ""}  . `);
+      let sentence = "sudo docker image build ";
+      if (u.contains(argv.b[0], ":"))
+        sentence += `-t ${argv.b[0]} -t ${u.stringReplace(argv.b[0], { ":.+": "" })}:latest `;
+      if (argv.b[1]) sentence += "-f " + argv.b[1];
+      cmd(sentence);
     }
     if (argv.R) {
       let target = JSON.parse(cmd(`sudo docker inspect ${argv.R}`, false, true));
