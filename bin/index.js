@@ -610,8 +610,9 @@ new ucmd("docker")
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "remove container" },
       { arg: "R", describe: "remove container and its volume" },
-      { arg: "e", describe: "execute with bash" },
-      { arg: "e", describe: "execute directly with bash" },
+      { arg: "e", describe: "execute or run with bash" },
+      { arg: "E", describe: "execute directly with bash" },
+      { arg: "T", describe: "transfer file with save or load, can be $i:ver or i_ver.tar, better define ver" },
     ],
   })
   .perform(async (argv) => {
@@ -647,6 +648,19 @@ new ucmd("docker")
       if (mounts != undefined) for (let i of mounts) await qs(i["Source"]);
     }
     if (argv.n) argv.n === true ? cmd("sudo docker network ls") : cmd("sudo docker network inspect " + argv.n);
+    if (argv.T) {
+      if (u.contains(argv.T, ".tar")) {
+        cmd(`sudo docker load < ${argv.T}`);
+      } else {
+        if (u.contains(argv.T, ":")) {
+          let ver = u.refind(argv.T, u.regexBetweenOut(":", "$"));
+          let rname = u.refind(argv.T, u.regexBetweenOut("^", ":"));
+          cmd(`sudo docker save -o ${rname}_ver_${ver}.tar ${argv.T}`);
+        } else {
+          cmd(`sudo docker save -o ${argv.T}.tar ${argv.T}`);
+        }
+      }
+    }
   });
 
 new ucmd("dc")
