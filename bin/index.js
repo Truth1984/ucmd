@@ -1177,7 +1177,7 @@ new ucmd("helper")
         tools: `wget -O - https://truth1984.github.io/testSites/s/tools.sh | bash`,
         desktop: `wget -O - https://truth1984.github.io/testSites/s/desktop.sh | bash`,
       });
-    if (argv.u) return cmd(`cd ${projectPath} && git pull && npm i`);
+    if (argv.u) return cmd(`cd ${projectPath} && rm package-lock.json && git pull && npm i`);
     let list = {
       git: {
         "branch create": "git branch $name",
