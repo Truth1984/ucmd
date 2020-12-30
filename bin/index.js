@@ -534,7 +534,9 @@ new ucmd("service", "name")
 
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
     if (argv.i) return cmd(`sudo systemctl list-units --type service -a --state=inactive`);
-    if (argv.n) return cmd(`sudo systemctl status ${await fuzzy(argv.n)}`);
+    let program = await fuzzy(argv.n);
+    if (u.len(program) == 0) program = argv.n;
+    if (argv.n) return cmd(`sudo systemctl status ${program}`);
 
     if (argv.e) {
       let target = await fuzzy(argv.e, false);
