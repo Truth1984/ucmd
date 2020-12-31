@@ -373,7 +373,7 @@ new ucmd("gitclone", "name", "user")
 
 new ucmd("gitwatch", "location", "branchName", "interval")
   .describer({
-    main: "watch file changes, auto pull every X seconds, require git, crontab, watch",
+    main: "DEPRECATED, USE JENKINS INSTEAD, watch file changes, auto pull every X seconds, require git, crontab, watch",
     options: [
       { arg: "l", describe: "project full location" },
       { arg: "b", describe: "target branch", default: "master" },
