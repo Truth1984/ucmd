@@ -325,7 +325,8 @@ new ucmd("process", "name")
     options: [
       { arg: "n", describe: "name to grep" },
       { arg: "f", describe: "full command display", boolean: true },
-      { arg: "s", describe: "sorted ps command, get first 10", boolean: true },
+      { arg: "s", describe: "sorted ps command by cpu first, get first 10", boolean: true },
+      { arg: "S", describe: "sorted ps command by memory first, get first 10", boolean: true },
       { arg: "K", describe: "kill relevant process" },
       { arg: "d", describe: "directory of running process, require pid" },
     ],
@@ -335,6 +336,7 @@ new ucmd("process", "name")
     if (argv.f) base += "wwf";
     if (argv.n) return cmd(base + " | grep " + argv.n);
     if (argv.s) return cmd("ps auxk -%cpu,%mem | head -n10");
+    if (argv.S) return cmd("ps auxk -%mem,%cpu | head -n10");
     if (argv.K) {
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
