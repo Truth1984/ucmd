@@ -426,7 +426,7 @@ echo $var;
 
 new ucmd("screen", "cmd", "name")
   .describer({
-    main: "start a screen command",
+    main: "start a screen command, use ctl+a+[ to enable scroll back mode",
     options: [
       { arg: "c", describe: "command to run in screen" },
       { arg: "n", describe: "name of the command" },
