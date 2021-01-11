@@ -341,7 +341,7 @@ new ucmd("process", "name")
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
     }
-    if (argv.d) cmd(`sudo pwdx ${argv.d}`);
+    if (argv.d) return cmd(`sudo pwdx ${argv.d}`);
     return cmd(base);
   });
 
