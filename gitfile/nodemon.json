@@ -1,0 +1,3 @@
+{   
+    "ignore": ["node_modules/*", "readme.md","Logger/*","Files/*",".ignored*"] 
+}
