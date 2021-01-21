@@ -530,6 +530,7 @@ new ucmd("service", "name")
       let target = services
         .filter((item) => item.indexOf(name) > -1)
         .map((i) => u.refind(i, /[\d\w].+/).trim())
+        .map((i) => u.stringReplace(i,{".service$":""}))
         .sort((a, b) => a.length - b.length);
       return multiSelect(target, undefined, undefined, quitOnUdf);
     };
