@@ -331,6 +331,7 @@ new ucmd("process", "name")
       { arg: "f", describe: "full command display", boolean: true },
       { arg: "s", describe: "sorted ps command by cpu first, get first 10" },
       { arg: "S", describe: "sorted ps command by memory first, get first 10" },
+      { arg: "t", describe: "trace pid log output" },
       { arg: "K", describe: "kill relevant process" },
       { arg: "d", describe: "directory of running process, require pid" },
     ],
@@ -341,6 +342,7 @@ new ucmd("process", "name")
     if (argv.n) return cmd(base + " | grep " + argv.n);
     if (argv.s) return cmd(`ps auxk -%cpu,%mem | head -n${u.int(argv.s) ? u.int(argv.s) : 10}`);
     if (argv.S) return cmd(`ps auxk -%mem,%cpu | head -n${u.int(argv.S) ? u.int(argv.S) : 10}`);
+    if (argv.t) return cmd(`sudo strace -p${argv.t} -s9999 -e write`);
     if (argv.K) {
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
