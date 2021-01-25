@@ -7,7 +7,7 @@ var download = require("../helper/downloader");
 var recorder = require("../helper/quickRecord");
 var os = require("os");
 var fs = require("fs");
-var read = require("readdirp");
+var readdirp = require("readdirp");
 var paths = require("path");
 var shellParser = require("../helper/shell-parser");
 var iniParser = require("ini");
@@ -173,7 +173,11 @@ new ucmd("search", "target", "basedir")
     options: [
       { arg: "t", describe: "target filename" },
       { arg: "b", describe: "base directory of the file" },
-      { arg: "i", describe: "Ignore directory like ['!log'], Include like ['*_log']", default: ["!.git", "!*modules"] },
+      {
+        arg: "i",
+        describe: "Ignore directory like ['!log'], Include like ['*_log']",
+        default: ["!.git", "!*modules", "!mnt"],
+      },
       { arg: "I", describe: "Ignore files like ['!.git'], Include like ['*.js']" },
       { arg: "a", describe: "output result as an array", boolean: true },
       { arg: "d", describe: "directory only", boolean: true },
@@ -205,7 +209,7 @@ new ucmd("search", "target", "basedir")
     };
 
     if (argv.I) options = u.mapMerge(options, { fileFilter: fileIgnores });
-    let nameArr = await read.promise(basedir, options);
+    let nameArr = await readdirp.promise(basedir, options);
 
     let result = [];
 
@@ -325,8 +329,8 @@ new ucmd("process", "name")
     options: [
       { arg: "n", describe: "name to grep" },
       { arg: "f", describe: "full command display", boolean: true },
-      { arg: "s", describe: "sorted ps command by cpu first, get first 10", boolean: true },
-      { arg: "S", describe: "sorted ps command by memory first, get first 10", boolean: true },
+      { arg: "s", describe: "sorted ps command by cpu first, get first 10" },
+      { arg: "S", describe: "sorted ps command by memory first, get first 10" },
       { arg: "K", describe: "kill relevant process" },
       { arg: "d", describe: "directory of running process, require pid" },
     ],
@@ -335,8 +339,8 @@ new ucmd("process", "name")
     let base = "ps -aux";
     if (argv.f) base += "wwf";
     if (argv.n) return cmd(base + " | grep " + argv.n);
-    if (argv.s) return cmd("ps auxk -%cpu,%mem | head -n10");
-    if (argv.S) return cmd("ps auxk -%mem,%cpu | head -n10");
+    if (argv.s) return cmd(`ps auxk -%cpu,%mem | head -n${u.int(argv.s) ? u.int(argv.s) : 10}`);
+    if (argv.S) return cmd(`ps auxk -%mem,%cpu | head -n${u.int(argv.S) ? u.int(argv.S) : 10}`);
     if (argv.K) {
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
@@ -530,7 +534,7 @@ new ucmd("service", "name")
       let target = services
         .filter((item) => item.indexOf(name) > -1)
         .map((i) => u.refind(i, /[\d\w].+/).trim())
-        .map((i) => u.stringReplace(i,{".service$":""}))
+        .map((i) => u.stringReplace(i, { ".service$": "" }))
         .sort((a, b) => a.length - b.length);
       return multiSelect(target, undefined, undefined, quitOnUdf);
     };
@@ -1118,7 +1122,7 @@ new ucmd("dep")
     if (fs.existsSync("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
     if (fs.existsSync("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
     if (pkgPath == "") return console.log("platform not supported");
-    let full = () => read.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
+    let full = () => readdirp.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
     if (argv.l) return full().then(console.log);
     if (argv.r) {
       return full().then(async (d) => {
