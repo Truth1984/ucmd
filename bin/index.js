@@ -252,7 +252,7 @@ new ucmd("sysinfo", "target")
     if (argv.h) return cmd("df -Th");
     if (argv.l) return cmd("du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
     if (fs.lstatSync(argv.t).isDirectory()) return cmd(`cd ${argv.t} && ls -alFh`);
-    else return cmd(`stat ${argv.f}`);
+    else return cmd(`stat ${argv.t}`);
   });
 
 new ucmd("mount", "target")
@@ -666,6 +666,7 @@ new ucmd("docker")
         if (u.contains(argv.T, ":")) {
           let ver = u.refind(argv.T, u.regexBetweenOut(":", "$"));
           let rname = u.refind(argv.T, u.regexBetweenOut("^", ":"));
+          if (u.contains(rname, "/")) rname = u.refind(rname, u.regexBetweenOut("/", "$"));
           cmd(`sudo docker save -o ${rname}_ver_${ver}.tar ${argv.T}`);
         } else {
           cmd(`sudo docker save -o ${argv.T}.tar ${argv.T}`);
@@ -1007,6 +1008,7 @@ new ucmd("link", "name")
       "link(ln) particular command to target user group, solve command not found issue, if command already exist, use $chmod",
     options: [
       { arg: "n", describe: "name of the command" },
+      { arg: "o", describe: "original link trace" },
       { arg: "u", describe: "user to use", default: "root" },
       { arg: "r", describe: "remove link" },
     ],
@@ -1017,6 +1019,7 @@ new ucmd("link", "name")
     if (!properPath) properPath = targetPathArr[0];
 
     let cmdPath = cmd(`command -v ${argv.n}`, false, true).trim();
+    if (argv.o) return cmd(`sudo realpath ${argv.o}`);
     if (argv.r) {
       cmdPath = cmd(`sudo -u ${argv.u} command -v ${argv.r}`, false, true).trim();
       return cmd(`sudo -u ${argv.u} unlink ${cmdPath}`, true);
