@@ -71,7 +71,15 @@ new ucmd("port", "portnum")
     return cmd("sudo netstat -lntup | grep " + argv.p);
   });
 
-new ucmd("ip").describer({ main: "find local ip adress" }).perform(() => cmd("ifconfig | grep inet", true));
+new ucmd("ip")
+  .describer({
+    main: "find local ip adress",
+    options: [{ arg: "p", describe: "public ip address find", boolean: true }],
+  })
+  .perform((argv) => {
+    if (argv.p) return cmd(`curl ident.me`);
+    cmd("ifconfig | grep inet", true);
+  });
 
 new ucmd("network", "device")
   .describer({
@@ -520,7 +528,8 @@ new ucmd("service", "name")
       { arg: "e", describe: "enable a service, and start" },
       { arg: "d", describe: "disable a service" },
       { arg: "r", describe: "restart service" },
-      { arg: "l", describe: "log service journal" },
+      { arg: "l", describe: "log service journal since boot" },
+      { arg: "L", describe: "log service journal full" },
       { arg: "A", describe: "absolute name, skip name filtering", boolean: true },
       { arg: "a", describe: "active process", boolean: true },
       { arg: "i", describe: "inactive process", boolean: true },
@@ -566,7 +575,8 @@ new ucmd("service", "name")
     }
 
     if (argv.r) return cmd(`sudo systemctl restart ${await fuzzy(argv.r)}`);
-    if (argv.l) return cmd(`sudo journalctl -u ${await fuzzy(argv.l)}.service`);
+    if (argv.l) return cmd(`sudo journalctl -u ${await fuzzy(argv.l)}.service -b `);
+    if (argv.L) return cmd(`sudo journalctl -u ${await fuzzy(argv.l)}.service`);
     cmd(`sudo systemctl list-units --type service --all`);
   });
 
