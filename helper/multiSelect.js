@@ -15,6 +15,7 @@ let selector = async (listsOrStr, index = 0, logfirst = true, exit = true) => {
       return l[index];
     }
     if (!Number.isNaN(u.int(ans))) return selector(l, u.int(ans), false);
+    process.exit(1);
   });
 };
 
