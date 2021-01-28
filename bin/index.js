@@ -331,7 +331,7 @@ new ucmd("process", "name")
       { arg: "f", describe: "full command display", boolean: true },
       { arg: "s", describe: "sorted ps command by cpu first, get first 10" },
       { arg: "S", describe: "sorted ps command by memory first, get first 10" },
-      { arg: "t", describe: "trace pid log output" },
+      { arg: "l", describe: "Log output with strace, using PID" },
       { arg: "K", describe: "kill relevant process" },
       { arg: "d", describe: "directory of running process, require pid" },
     ],
@@ -342,7 +342,7 @@ new ucmd("process", "name")
     if (argv.n) return cmd(base + " | grep " + argv.n);
     if (argv.s) return cmd(`ps auxk -%cpu,%mem | head -n${u.int(argv.s) ? u.int(argv.s) : 10}`);
     if (argv.S) return cmd(`ps auxk -%mem,%cpu | head -n${u.int(argv.S) ? u.int(argv.S) : 10}`);
-    if (argv.t) return cmd(`sudo strace -p${argv.t} -s9999 -e write`);
+    if (argv.l) return cmd(`sudo strace -p${argv.l} -s9999 -e write`);
     if (argv.K) {
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
@@ -520,6 +520,7 @@ new ucmd("service", "name")
       { arg: "e", describe: "enable a service, and start" },
       { arg: "d", describe: "disable a service" },
       { arg: "r", describe: "restart service" },
+      { arg: "l", describe: "log service journal" },
       { arg: "A", describe: "absolute name, skip name filtering", boolean: true },
       { arg: "a", describe: "active process", boolean: true },
       { arg: "i", describe: "inactive process", boolean: true },
@@ -565,6 +566,7 @@ new ucmd("service", "name")
     }
 
     if (argv.r) return cmd(`sudo systemctl restart ${await fuzzy(argv.r)}`);
+    if (argv.l) return cmd(`sudo journalctl -u ${await fuzzy(argv.l)}.service`);
     cmd(`sudo systemctl list-units --type service --all`);
   });
 
