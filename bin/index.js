@@ -1270,6 +1270,9 @@ new ucmd("helper")
         changeGroup: "sudo passwd -g $group",
         expire: "sudo passwd -e $user",
       },
+      rsyslog: {
+        restart: "also need to restart systemd-journald",
+      },
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);
