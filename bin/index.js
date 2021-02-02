@@ -657,7 +657,9 @@ new ucmd("docker")
       let sentence = "sudo docker image build ";
       if (u.contains(argv.b[0], ":"))
         sentence += `-t ${argv.b[0]} -t ${u.stringReplace(argv.b[0], { ":.+": "" })}:latest `;
-      if (argv.b[1]) sentence += "-f " + argv.b[1];
+      else sentence += `-t ${argv.b[0]}:latest `;
+      if (argv.b[1]) sentence += "-f " + argv.b[1] + " ";
+      sentence += ". ";
       cmd(sentence);
     }
     if (argv.R) {
