@@ -1159,6 +1159,7 @@ new ucmd("os", "is")
     options: [
       { arg: "i", describe: "is it ... ? can be win | linux | mac | centos ..." },
       { arg: "v", describe: "find versions", boolean: true },
+      { arg: "c", describe: "codename for ubuntu / debian", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -1174,9 +1175,14 @@ new ucmd("os", "is")
       return console.log(u.contains(content, argv.i));
     }
     if (argv.v) {
-      if (checkOS("linux")) return cmd("uname -r");
+      if (checkOS("linux")) return cmd("env -i bash -c '. /etc/os-release; echo $VERSION_ID'");
       if (checkOS("win")) return console.log(os.version());
       if (checkOS("mac")) return cmd("sw_vers -productVersion");
+    }
+
+    if (argv.c) {
+      if (checkOS("ubuntu")) return cmd(`env -i bash -c '. /etc/os-release; echo $VERSION_CODENAME'`);
+      if (checkOS("debian")) return cmd(`dpkg --status tzdata|grep Provides|cut -f2 -d'-'`);
     }
     console.log({
       hostname: os.hostname(),
