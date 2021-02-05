@@ -698,6 +698,7 @@ new ucmd("dc")
       { arg: "i", describe: "images display", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
+      { arg: "R", describe: "restart the container", boolean: true },
       { arg: "e", describe: "execute bash command" },
       { arg: "L", describe: "live log" },
       { arg: "l", describe: "logs service" },
@@ -709,10 +710,12 @@ new ucmd("dc")
     if (argv.i) return cmd("sudo docker-compose images");
     if (argv.p) return cmd("sudo docker-compose ps" + (argv.a ? " -a" : ""));
     if (argv.r) return cmd("sudo docker-compose rm -s");
+    if (argv.R) return cmd("sudo docker-compose restart");
     let loadKeys = () => {
       let yobj = yamlParser.load("docker-compose.yml");
       return multiSelect(u.mapKeys(yobj.services));
     };
+
     if (argv.e) {
       if (argv.e === true) argv.e = await loadKeys();
       return cmd(`sudo docker-compose exec --privileged ${argv.e} /bin/bash`);
