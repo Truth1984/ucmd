@@ -719,7 +719,7 @@ new ucmd("dc")
     }
     if (argv.l) {
       if (argv.l === true) argv.l = await loadKeys();
-      return cmd("sudo docker-compose logs " + argv.l);
+      return cmd("sudo docker-compose logs " + argv.l + " | tail -n500");
     }
     if (argv.L) {
       if (argv.L === true) argv.L = await loadKeys();
