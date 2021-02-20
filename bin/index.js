@@ -696,6 +696,7 @@ new ucmd("dc")
       { arg: "u", describe: "up, detached mode", boolean: true },
       { arg: "d", describe: "down, and remove orphan", boolean: true },
       { arg: "i", describe: "images display", boolean: true },
+      { arg: "b", describe: "build image", boolean: true },
       { arg: "p", describe: "process list AKA containter", boolean: true },
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
       { arg: "R", describe: "restart the container", boolean: true },
@@ -708,6 +709,7 @@ new ucmd("dc")
     if (argv.u) return cmd("sudo docker-compose up -d");
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
     if (argv.i) return cmd("sudo docker-compose images");
+    if (argv.b) return cmd("sudo docker-compose build");
     if (argv.p) return cmd("sudo docker-compose ps" + (argv.a ? " -a" : ""));
     if (argv.r) return cmd("sudo docker-compose rm -s");
     if (argv.R) return cmd("sudo docker-compose restart");
