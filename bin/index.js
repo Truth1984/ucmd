@@ -709,7 +709,7 @@ new ucmd("dc")
     if (argv.u) return cmd(`sudo docker-compose --env-file ${u.typeCheck(argv.u, "str") ? argv.u : ".env"} up -d`);
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
     if (argv.i) return cmd("sudo docker-compose images");
-    if (argv.b) return cmd("sudo docker-compose build");
+    if (argv.b) return cmd("sudo docker-compose build --force-rm");
     if (argv.p) return cmd("sudo docker-compose ps" + (argv.a ? " -a" : ""));
     if (argv.r) return cmd("sudo docker-compose rm -s");
     if (argv.R) return cmd("sudo docker-compose restart");
