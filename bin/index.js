@@ -693,7 +693,7 @@ new ucmd("dc")
   .describer({
     main: "docker-compose command",
     options: [
-      { arg: "u", describe: "up, detached mode", boolean: true },
+      { arg: "u", describe: "up, detached mode, may specify path of .env file" },
       { arg: "d", describe: "down, and remove orphan", boolean: true },
       { arg: "i", describe: "images display", boolean: true },
       { arg: "b", describe: "build image", boolean: true },
@@ -706,7 +706,7 @@ new ucmd("dc")
     ],
   })
   .perform(async (argv) => {
-    if (argv.u) return cmd("sudo docker-compose up -d");
+    if (argv.u) return cmd(`sudo docker-compose --env-file ${u.typeCheck(argv.u, "str") ? argv.u : ".env"} up -d`);
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
     if (argv.i) return cmd("sudo docker-compose images");
     if (argv.b) return cmd("sudo docker-compose build");
