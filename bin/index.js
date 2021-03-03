@@ -1286,6 +1286,10 @@ new ucmd("helper")
       rsyslog: {
         restart: "also need to restart systemd-journald",
       },
+      nginx: {
+        reload: "nginx -s reload",
+        "bind-failed": "sudo setenforce 0",
+      },
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);
