@@ -701,6 +701,7 @@ new ucmd("dc")
       { arg: "r", describe: "stop container and remove corresponding volume", boolean: true },
       { arg: "R", describe: "restart the container", boolean: true },
       { arg: "e", describe: "execute bash command" },
+      { arg: "E", describe: "execute particular command" },
       { arg: "L", describe: "live log" },
       { arg: "l", describe: "logs service" },
     ],
@@ -722,6 +723,11 @@ new ucmd("dc")
       if (argv.e === true) argv.e = await loadKeys();
       return cmd(`sudo docker-compose exec --privileged ${argv.e} /bin/bash`);
     }
+    if (argv.E) {
+      let target = await loadKeys();
+      return cmd(`sudo docker-compose exec --privileged ${target} ${argv.E}`);
+    }
+
     if (argv.l) {
       if (argv.l === true) argv.l = await loadKeys();
       return cmd("sudo docker-compose logs " + argv.l + " | tail -n500");
