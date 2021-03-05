@@ -175,12 +175,34 @@ new ucmd("quick", "name", "cmd")
     if (argv.r) return recorder.remove(argv.r);
   });
 
+new ucmd("sf", "content", "basedir")
+  .describer({
+    main: "find the file in location, basedir default to current location",
+    options: [
+      { arg: "c", describe: "content inside a file" },
+      { arg: "b", describe: "base directory of the file", default: "." },
+      { arg: "i", describe: "Ignore file pattern", default: "/mnt,package-lock*,yarn.lock" },
+      { arg: "D", describe: "subdirectory Depth", default: 10 },
+      { arg: "S", describe: "Show matched Content", boolean: true },
+      { arg: "A", describe: "all the file to be searched", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let line = `sudo ag --follow --column --noheading --depth ${argv.D} `;
+    if (!argv.S) line += "--files-with-matches ";
+    if (!argv.A && argv.i) line += `--ignore={${argv.i}} `;
+    if (argv.A) line += "--unrestricted ";
+
+    line += `${argv.c} ${argv.b}`;
+    return cmd(line);
+  });
+
 new ucmd("search", "target", "basedir")
   .describer({
     main: "find the file in location, basedir default to current location",
     options: [
       { arg: "t", describe: "target filename" },
-      { arg: "b", describe: "base directory of the file" },
+      { arg: "b", describe: "base directory of the file", default: "." },
       {
         arg: "i",
         describe: "Ignore directory like ['!log'], Include like ['*_log']",
@@ -201,7 +223,6 @@ new ucmd("search", "target", "basedir")
     ],
   })
   .perform(async (argv) => {
-    if (!argv.b) argv.b = process.cwd();
     let target = argv.t;
     let basedir = argv.b;
     let ignores = argv.i;
