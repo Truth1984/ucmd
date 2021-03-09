@@ -1099,6 +1099,53 @@ new ucmd("install", "name")
     }
   });
 
+new ucmd("ansible", "name", "command")
+  .describer({
+    main: "ansible related command",
+    options: [
+      { arg: "n", describe: "name to put in the category" },
+      { arg: "c", describe: "command to run on target machine" },
+      { arg: "a", describe: "add host to hosts file" },
+      { arg: "l", describe: "list hosts" },
+      { arg: "C", describe: "cat the file", boolean: true },
+      { arg: "E", describe: "edit the host file", boolean: true },
+    ],
+  })
+  .perform(async (argv) => {
+    let hostLoc = "/etc/ansible/hosts";
+    let hostname = argv.n ? argv.n : "unknown";
+
+    if (argv.a) {
+      let content = fs.readFileSync(hostLoc).toString();
+      if (u.contains(content, argv.a)) return console.log(`already contained ${argv.a}`);
+      let contentMap = iniParser.parse(content);
+
+      contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [argv.a]: true } });
+
+      if (!u.contains(u.mapKeys(contentMap, hostname + ":vars")))
+        contentMap[hostname + ":vars"] = {
+          ansible_user: "root",
+          ansible_port: "22",
+        };
+
+      let str = u.reSub(iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
+
+      return fs.writeFileSync(hostLoc, str, { flag: "w+" });
+    }
+
+    if (argv.c) {
+      return cmd(`ansible ${hostname} --private-key ~/.ssh/id_rsa -m shell -v -a '${argv.c}'`, true);
+    }
+
+    if (argv.l) {
+      if (argv.l == true) return cmd(`ansible --list-hosts all`);
+      return cmd(`ansible --list-hosts ${argv.l}`);
+    }
+
+    if (argv.C) return cmd(`sudo cat ${hostLoc}`);
+    if (argv.E) return cmd(`sudo nano ${hostLoc}`);
+  });
+
 new ucmd("eval", "line")
   .describer({
     main: "eval for nodejs",
