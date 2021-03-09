@@ -33,18 +33,6 @@ let fileExistProcess = (file) => {
   return file;
 };
 
-let getTime = () => {
-  let dobj = new Date();
-  return {
-    year: dobj.getFullYear(),
-    month: dobj.getMonth() + 1,
-    day: dobj.getDate(),
-    hour: dobj.getHours(),
-    minute: dobj.getMinutes(),
-    second: dobj.getSeconds(),
-  };
-};
-
 let checkOS = (name) => {
   return cmd(`u os ${name}`, false, true).trim() == "true";
 };
@@ -183,13 +171,13 @@ new ucmd("sf", "content", "basedir")
       { arg: "b", describe: "base directory of the file", default: "." },
       { arg: "i", describe: "Ignore file pattern", default: "/mnt,package-lock*,yarn.lock" },
       { arg: "D", describe: "subdirectory Depth", default: 10 },
-      { arg: "S", describe: "Show matched Content", boolean: true },
+      { arg: "s", describe: "Show matched Content", boolean: true },
       { arg: "A", describe: "all the file to be searched", boolean: true },
     ],
   })
   .perform((argv) => {
     let line = `sudo ag --follow --column --noheading --depth ${argv.D} `;
-    if (!argv.S) line += "--files-with-matches ";
+    if (!argv.s) line += "--files-with-matches ";
     if (!argv.A && argv.i) line += `--ignore={${argv.i}} `;
     if (argv.A) line += "--unrestricted ";
 
@@ -794,7 +782,7 @@ new ucmd("iptable")
     if (argv.p) return cmd("sudo iptables -L -v");
 
     if (argv.s) {
-      let ctime = getTime();
+      let ctime = u.dateCurrent();
       //sudo iptables-restore < /tmp/iptables_backup
       return cmd(
         `sudo iptables-save > /tmp/iptables_backup_${ctime.year}${ctime.month}${ctime.day}${ctime.hour}${ctime.minute}`
@@ -955,7 +943,7 @@ new ucmd("backup", "file")
     }
 
     argv.f = fileExistProcess(argv.f);
-    let time = getTime();
+    let time = u.dateCurrent();
     let filename = paths.basename(argv.f) + [time.year, time.month, time.day, time.hour, time.minute].join("-");
 
     backupJson[filename] = argv.f;
