@@ -1105,8 +1105,10 @@ new ucmd("ansible", "name", "command")
     options: [
       { arg: "n", describe: "name to put in the category" },
       { arg: "c", describe: "command to run on target machine" },
+      { arg: "s", describe: "script to run on the target machine" },
       { arg: "a", describe: "add host to hosts file" },
       { arg: "l", describe: "list hosts" },
+      { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
       { arg: "E", describe: "edit the host file", boolean: true },
     ],
@@ -1114,6 +1116,8 @@ new ucmd("ansible", "name", "command")
   .perform(async (argv) => {
     let hostLoc = "/etc/ansible/hosts";
     let hostname = argv.n ? argv.n : "unknown";
+    let playbookdir = __dirname + "/playbook.yml";
+    let debugmode = argv.D ? "-vvv" : "";
 
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
@@ -1134,7 +1138,19 @@ new ucmd("ansible", "name", "command")
     }
 
     if (argv.c) {
-      return cmd(`ansible ${hostname} --private-key ~/.ssh/id_rsa -m shell -v -a '${argv.c}'`, true);
+      return cmd(
+        `ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
+        true
+      );
+    }
+
+    if (argv.s) {
+      return cmd(
+        `ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
+          argv.s
+        )}' ${playbookdir}`,
+        true
+      );
     }
 
     if (argv.l) {
