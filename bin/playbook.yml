@@ -4,13 +4,19 @@
   tasks:
     - name: running shell
       shell:
-        cmd: "{{apb_shell}}"
+        cmd: "{{apb_shell | expanduser}}"
       register: apb_shell_output
+      retries: 5
+      until: apb_shell_output.rc == 0
+      delay: 1
       when: apb_runtype == "shell"
 
     - name: running script
-      ansible.builtin.script: "{{apb_script}}"
+      ansible.builtin.script: "{{apb_script | expanduser}}"
       register: apb_script_output
+      retries: 5
+      until: apb_script_output.rc == 0
+      delay: 1
       when: apb_runtype == "script"
 
     - debug:

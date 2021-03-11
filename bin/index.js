@@ -322,7 +322,7 @@ new ucmd("ssh", "address")
     let name = "root";
     let addr = "";
     let port = 22;
-    if (u.contains(argv.a, "@") && u.contains(argv.a, ":")) {
+    if (u.contains(argv.a, ["@", ":"])) {
       name = u.refind(argv.a, u.regexBetweenOut("^", "@"));
       addr = u.refind(argv.a, u.regexBetweenOut("@", ":"));
       port = u.refind(argv.a, u.regexBetweenOut(":", "$"));
@@ -1103,11 +1103,13 @@ new ucmd("ansible", "name", "command")
   .describer({
     main: "ansible related command",
     options: [
-      { arg: "n", describe: "name to put in the category" },
+      { arg: "n", describe: "name to put in the category or use", default: "localhost" },
       { arg: "c", describe: "command to run on target machine" },
       { arg: "s", describe: "script to run on the target machine" },
       { arg: "a", describe: "add host to hosts file" },
-      { arg: "l", describe: "list hosts" },
+      { arg: "t", describe: "to, transfer file to ~/.application/ansible, taken in local file" },
+      { arg: "f", describe: "from, fetch file from remote to current/ansible/ip" },
+      { arg: "l", describe: "list hosts, can be pattern" },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
       { arg: "E", describe: "edit the host file", boolean: true },
@@ -1115,9 +1117,10 @@ new ucmd("ansible", "name", "command")
   })
   .perform(async (argv) => {
     let hostLoc = "/etc/ansible/hosts";
-    let hostname = argv.n ? argv.n : "unknown";
+    let hostname = argv.n;
     let playbookdir = __dirname + "/playbook.yml";
     let debugmode = argv.D ? "-vvv" : "";
+    let preconfig = "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks";
 
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
@@ -1139,19 +1142,22 @@ new ucmd("ansible", "name", "command")
 
     if (argv.c) {
       return cmd(
-        `ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
+        `${preconfig} ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
         true
       );
     }
 
     if (argv.s) {
       return cmd(
-        `ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
+        `${preconfig} ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
           argv.s
         )}' ${playbookdir}`,
         true
       );
     }
+
+    //argv.t
+    //argv.f
 
     if (argv.l) {
       if (argv.l == true) return cmd(`ansible --list-hosts all`);
@@ -1306,6 +1312,7 @@ new ucmd("helper")
       },
       crontab: {
         edit: "sudo crontab -e",
+        "shell support - top of file add": "SHELL=/bin/bash",
         "run command on reboot": "@reboot CMD",
         web: "https://crontab.guru/",
         "At every 5th minute": "*/5 * * * *",

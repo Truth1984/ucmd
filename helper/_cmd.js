@@ -6,7 +6,6 @@ let DIR = __dirname + "/..";
 
 module.exports = (scripts, log, returnable = false, full = false) => {
   if (log) console.log(scripts);
-  scripts = u.stringReplace(scripts, { "~": process.env.HOME });
   let cmdarray = scripts.split(" ");
   return full
     ? spawnSync(cmdarray.shift(), cmdarray, {

@@ -11,6 +11,8 @@ new ucmd("_test").perform((argv) => console.log("testing"));
 
 new ucmd("_author").perform(() => console.log("Awada.Z"));
 
+new ucmd("_home").perform(() => cmd("echo ~", true));
+
 new ucmd("_ask").describer({ main: "asking test" }).perform((argv) => {
   cmdq({ "what is your name": false, "your password": true }).then(console.log);
 });
