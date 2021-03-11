@@ -1107,8 +1107,6 @@ new ucmd("ansible", "name", "command")
       { arg: "c", describe: "command to run on target machine" },
       { arg: "s", describe: "script to run on the target machine" },
       { arg: "a", describe: "add host to hosts file" },
-      { arg: "t", describe: "to, transfer file to ~/.application/ansible, taken in local file" },
-      { arg: "f", describe: "from, fetch file from remote to current/ansible/ip" },
       { arg: "l", describe: "list hosts, can be pattern" },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
@@ -1155,9 +1153,6 @@ new ucmd("ansible", "name", "command")
         true
       );
     }
-
-    //argv.t
-    //argv.f
 
     if (argv.l) {
       if (argv.l == true) return cmd(`ansible --list-hosts all`);
