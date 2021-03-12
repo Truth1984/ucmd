@@ -13,8 +13,9 @@ var shellParser = require("../helper/shell-parser");
 var iniParser = require("ini");
 var yamlParser = require("yamljs");
 var u = require("awadau");
-var multiSelect = require("../helper/multiSelect");
 require("./test");
+
+const util = require("../helper/util");
 
 let parseJson = (string, tostring = true) => {
   if (tostring) return JSON.stringify(eval("(" + string + ")"));
@@ -50,7 +51,6 @@ new ucmd("port", "portnum")
       if (!argv.p) return cmd("netstat -bn");
       return cmd("netstat -bn | grep " + argv.p);
     }
-    //
     if (argv.d) {
       if (argv.d == true) return cmd(`sudo docker ps --format "{{.Ports}}\t:\t{{.Image}}"`);
       else return cmd(`sudo docker ps | grep  ${argv.d}`);
@@ -311,33 +311,23 @@ new ucmd("ssh", "address")
     options: [
       { arg: "a", describe: "address, like root@localhost:22" },
       { arg: "n", describe: "name of alias" },
+      { arg: "l", describe: "list grouped address for ansible use", boolean: true },
+      { arg: "E", describe: "edit ansible list", boolean: true },
       { arg: "r", describe: "refresh keygen token", boolean: true },
     ],
   })
   .perform((argv) => {
+    if (argv.l) return cmd(`u ansible -l`);
+    if (argv.E) return cmd(`u ansible -E`);
+
     let keygen = "ssh-keygen -t rsa -b 4096";
     if (argv.r) cmd(keygen);
     cmd(`if ! [ -f $HOME/.ssh/id_rsa ]; then ${keygen}; fi;`);
 
-    let name = "root";
-    let addr = "";
-    let port = 22;
-    if (u.contains(argv.a, ["@", ":"])) {
-      name = u.refind(argv.a, u.regexBetweenOut("^", "@"));
-      addr = u.refind(argv.a, u.regexBetweenOut("@", ":"));
-      port = u.refind(argv.a, u.regexBetweenOut(":", "$"));
-    } else if (u.contains(argv.a, "@")) {
-      name = u.refind(argv.a, u.regexBetweenOut("^", "@"));
-      addr = u.refind(argv.a, u.regexBetweenOut("@", "$"));
-    } else if (u.contains(argv.a, ":")) {
-      addr = u.refind(argv.a, u.regexBetweenOut("^", ":"));
-      port = u.refind(argv.a, u.regexBetweenOut(":", "$"));
-    } else {
-      addr = argv.a;
-    }
+    let { user, addr, port } = util.sshGrep(argv.a);
 
-    cmd(`ssh-copy-id -i ~/.ssh/id_rsa.pub -p ${port} ${name}@${addr}`);
-    if (argv.n) cmd(`u quick ssh${argv.n} "ssh -p ${port} ${name}@${addr}"`);
+    cmd(`ssh-copy-id -i ~/.ssh/id_rsa.pub -p ${port} ${user}@${addr}`);
+    if (argv.n) cmd(`u quick ssh${argv.n} "ssh -p ${port} ${user}@${addr}"`);
   });
 
 new ucmd("process", "name")
@@ -382,7 +372,6 @@ new ucmd("gitclone", "name", "user")
   .perform((argv) => {
     if (argv.i) {
       if (!fs.existsSync(".git")) return console.log("Error: git folder not found");
-
       return cmd(`cp -a $DIR/gitfile/. ./`);
     }
 
@@ -557,7 +546,7 @@ new ucmd("service", "name")
         .map((i) => u.refind(i, /[\d\w].+/).trim())
         .map((i) => u.stringReplace(i, { ".service$": "" }))
         .sort((a, b) => a.length - b.length);
-      return multiSelect(target, undefined, undefined, quitOnUdf);
+      return util.multiSelect(target, undefined, undefined, quitOnUdf);
     };
 
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
@@ -716,6 +705,11 @@ new ucmd("dc")
     ],
   })
   .perform(async (argv) => {
+    let loadKeys = () => util.multiSelect(u.mapKeys(yamlParser.load("docker-compose.yml").services));
+    if (argv.e === true) argv.e = await loadKeys();
+    if (argv.l === true) argv.l = await loadKeys();
+    if (argv.L === true) argv.L = await loadKeys();
+
     if (argv.u) return cmd(`sudo docker-compose --env-file ${u.typeCheck(argv.u, "str") ? argv.u : ".env"} up -d`);
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
     if (argv.i) return cmd("sudo docker-compose images");
@@ -723,28 +717,10 @@ new ucmd("dc")
     if (argv.p) return cmd("sudo docker-compose ps" + (argv.a ? " -a" : ""));
     if (argv.r) return cmd("sudo docker-compose rm -s");
     if (argv.R) return cmd("sudo docker-compose restart");
-    let loadKeys = () => {
-      let yobj = yamlParser.load("docker-compose.yml");
-      return multiSelect(u.mapKeys(yobj.services));
-    };
-
-    if (argv.e) {
-      if (argv.e === true) argv.e = await loadKeys();
-      return cmd(`sudo docker-compose exec --privileged ${argv.e} /bin/bash`);
-    }
-    if (argv.E) {
-      let target = await loadKeys();
-      return cmd(`sudo docker-compose exec --privileged ${target} ${argv.E}`);
-    }
-
-    if (argv.l) {
-      if (argv.l === true) argv.l = await loadKeys();
-      return cmd("sudo docker-compose logs " + argv.l + " | tail -n500");
-    }
-    if (argv.L) {
-      if (argv.L === true) argv.L = await loadKeys();
-      return cmd(`sudo docker-compose logs -f ${argv.L}`);
-    }
+    if (argv.e) return cmd(`sudo docker-compose exec --privileged ${argv.e} /bin/bash`);
+    if (argv.E) return cmd(`sudo docker-compose exec --privileged ${await loadKeys()} ${argv.E}`);
+    if (argv.l) return cmd("sudo docker-compose logs " + argv.l + " | tail -n500");
+    if (argv.L) return cmd(`sudo docker-compose logs -f ${argv.L}`);
   });
 
 new ucmd("post", "url", "data")
@@ -756,13 +732,11 @@ new ucmd("post", "url", "data")
     ],
   })
   .perform((argv) => {
-    if (argv.u.indexOf("http") < 0) argv.u = "http://" + argv.u;
-    cmd(
-      `curl -X POST -A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0" -H "Content-Type: application/json" -d '${parseJson(
-        argv.d
-      )}' ${argv.u}`,
-      true
-    );
+    argv.u = u.url(argv.u);
+    let agent = '-A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"';
+    let header = '-H "Content-Type: application/json"';
+
+    cmd(`curl -X POST ${agent} ${header} -d '${parseJson(argv.d)}' ${argv.u}`, true);
     console.log("");
   });
 
@@ -781,13 +755,8 @@ new ucmd("iptable")
     // iptables is not quiet useful if all the connections have docker network proxy
     if (argv.p) return cmd("sudo iptables -L -v");
 
-    if (argv.s) {
-      let ctime = u.dateCurrent();
-      //sudo iptables-restore < /tmp/iptables_backup
-      return cmd(
-        `sudo iptables-save > /tmp/iptables_backup_${ctime.year}${ctime.month}${ctime.day}${ctime.hour}${ctime.minute}`
-      );
-    }
+    //sudo iptables-restore < /tmp/iptables_backup
+    if (argv.s) return cmd(`sudo iptables-save > /tmp/iptables_backup_${u.dateFormat("plain")}`);
 
     //block ssh
     //sudo iptables -A INPUT -p tcp -s xxx.xxx.xxx.0/24 --dport 22 -j DROP
@@ -935,7 +904,7 @@ new ucmd("backup", "file")
 
     if (argv.r) {
       let target = u.mapKeys(backupJson).filter((i) => u.contains(i, argv.r));
-      return multiSelect(target).then((data) => {
+      return util.multiSelect(target).then((data) => {
         fs.unlinkSync(basePath + data);
         delete backupJson[data];
         return fs.writeFileSync(recordsPath, u.jsonToString(backupJson));
@@ -1114,7 +1083,8 @@ new ucmd("ansible", "name", "command")
     ],
   })
   .perform(async (argv) => {
-    let hostLoc = "/etc/ansible/hosts";
+    let hostLoc = "~/.application/ansible/hosts";
+    if (!fs.existsSync(hostLoc)) fs.mkdirSync(paths.dirname(hostLoc), { recursive: true });
     let hostname = argv.n;
     let playbookdir = __dirname + "/playbook.yml";
     let debugmode = argv.D ? "-vvv" : "";
@@ -1154,10 +1124,8 @@ new ucmd("ansible", "name", "command")
       );
     }
 
-    if (argv.l) {
-      if (argv.l == true) return cmd(`ansible --list-hosts all`);
-      return cmd(`ansible --list-hosts ${argv.l}`);
-    }
+    if (argv.l == true) return cmd(`ansible --list-hosts all`);
+    if (argv.l) return cmd(`ansible --list-hosts ${argv.l}`);
 
     if (argv.C) return cmd(`sudo cat ${hostLoc}`);
     if (argv.E) return cmd(`sudo nano ${hostLoc}`);
@@ -1230,7 +1198,7 @@ new ucmd("dep")
     if (argv.r) {
       return full().then(async (d) => {
         let processed = d.filter((i) => u.contains(i, argv.r));
-        let target = await multiSelect(processed);
+        let target = await util.multiSelect(processed);
         cmd(`u backup ${target}`);
         cmd(`sudo rm -rf ${target}`);
       });
@@ -1268,6 +1236,7 @@ new ucmd("os", "is")
       if (checkOS("ubuntu")) return cmd(`env -i bash -c '. /etc/os-release; echo $VERSION_CODENAME'`);
       if (checkOS("debian")) return cmd(`dpkg --status tzdata|grep Provides|cut -f2 -d'-'`);
     }
+
     console.log({
       hostname: os.hostname(),
       platform: os.platform(),
