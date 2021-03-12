@@ -169,7 +169,7 @@ new ucmd("sf", "content", "basedir")
     options: [
       { arg: "c", describe: "content inside a file" },
       { arg: "b", describe: "base directory of the file", default: "." },
-      { arg: "i", describe: "Ignore file pattern", default: "/mnt,package-lock*,yarn.lock" },
+      { arg: "i", describe: "Ignore file pattern", default: "/mnt,package-lock*,node_module,yarn.lock" },
       { arg: "D", describe: "subdirectory Depth", default: 10 },
       { arg: "s", describe: "Show matched Content", boolean: true },
       { arg: "A", describe: "all the file to be searched", boolean: true },
