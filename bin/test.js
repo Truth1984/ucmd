@@ -18,5 +18,5 @@ new ucmd("_ask").describer({ main: "asking test" }).perform((argv) => {
 });
 
 new ucmd("_do", "task")
-  .describer({ main: "pipe task", options: [{ arg: "t", describe: "task to pipe" }] })
+  .describer({ main: "pipe task", options: [{ arg: "t", describe: "task to pipe", alias: "pipe" }] })
   .perform((argv) => cmd(argv.t));

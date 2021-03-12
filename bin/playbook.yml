@@ -11,14 +11,6 @@
       delay: 1
       when: apb_runtype == "shell"
 
-    - name: running script
-      ansible.builtin.script: "{{apb_script | expanduser}}"
-      register: apb_script_output
-      retries: 5
-      until: apb_script_output.rc == 0
-      delay: 1
-      when: apb_runtype == "script"
-
     - debug:
         msg:
           - name:{{ansible_env.u_name | default("")}}
@@ -26,6 +18,14 @@
           - stdout:{{ apb_shell_output.stdout }}
           - stderr:{{ apb_shell_output.stderr }}
       when: apb_runtype == "shell"
+
+    - name: running script
+      ansible.builtin.script: "{{apb_script | expanduser}}"
+      register: apb_script_output
+      retries: 5
+      until: apb_script_output.rc == 0
+      delay: 1
+      when: apb_runtype == "script"
 
     - debug:
         msg:
