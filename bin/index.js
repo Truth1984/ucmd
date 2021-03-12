@@ -311,14 +311,20 @@ new ucmd("ssh", "address", "name")
     options: [
       { arg: "a", describe: "address, like root@localhost:22, auto add to ansible lists" },
       { arg: "n", describe: "name of alias, should be sshIP" },
-      { arg: "l", describe: "list grouped address for ansible use", boolean: true },
+      { arg: "l", describe: "list grouped address for ansible use" },
+      { arg: "L", describe: "list parsed and separated by ," },
       { arg: "E", describe: "edit ansible list", boolean: true },
       { arg: "r", describe: "refresh keygen token", boolean: true },
     ],
   })
   .perform((argv) => {
-    if (argv.l) return cmd(`u ansible -l`);
+    if (argv.l) return cmd(`u ansible -l=${argv.l == true ? "all" : argv.l}`);
     if (argv.E) return cmd(`u ansible -E`);
+
+    if (argv.L) {
+      let parse = (line) => u.stringReplace(line, { "\n": ",", " ": "", ",$": "" });
+      return console.log(parse(cmd(`u ansible -l=${argv.L == true ? "all" : argv.L} | tail -n +2`, false, true)));
+    }
 
     if (!argv.n) return console.log("ansible unique name not specified");
     let { user, addr, port } = util.sshGrep(argv.a);
@@ -1091,6 +1097,7 @@ new ucmd("ansible", "name", "command")
     let playbookdir = __dirname + "/playbook.yml";
     let debugmode = argv.D ? "-vvv" : "";
     let preconfig = "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks";
+    let invLoc = `-i ${hostLoc}`;
 
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
@@ -1114,22 +1121,22 @@ new ucmd("ansible", "name", "command")
 
     if (argv.c) {
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
+        `${preconfig} ansible-playbook ${debugmode} ${invLoc} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
         true
       );
     }
 
     if (argv.s) {
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
+        `${preconfig} ansible-playbook ${debugmode} ${invLoc} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
           argv.s
         )}' ${playbookdir}`,
         true
       );
     }
 
-    if (argv.l == true) return cmd(`ansible --list-hosts all`);
-    if (argv.l) return cmd(`ansible --list-hosts ${argv.l}`);
+    if (argv.l == true) return cmd(`ansible ${invLoc} --list-hosts all`);
+    if (argv.l) return cmd(`ansible ${invLoc} --list-hosts ${argv.l}`);
 
     if (argv.C) return cmd(`sudo cat ${hostLoc}`);
     if (argv.E) return cmd(`sudo nano ${hostLoc}`);
@@ -1158,8 +1165,8 @@ new ucmd("result", "cmd")
   .perform((argv) => {
     let command = argv.C;
     if (argv.f) command += " 2>&1";
-    if (argv.h) command += ` | head -n ${argv.h}`;
-    if (argv.t) command += ` | tail -n ${argv.t}`;
+    if (argv.h) command += ` | tail -n +${argv.h}`;
+    if (argv.t) command += ` | head -n +${argv.t}`;
     if (argv.c) command += ` | awk '{print $${u.stringReplace(argv.c, { ",": ',"||",$' }, false)}}'`;
     let result = cmd(command, false, true);
     if (u.contains(result, "||")) result = shellParser(result, { separator: "||" });
