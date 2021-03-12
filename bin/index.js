@@ -305,12 +305,12 @@ new ucmd("mount", "target")
     }
   });
 
-new ucmd("ssh", "address")
+new ucmd("ssh", "address", "name")
   .describer({
     main: "use keygen to generate key pairs",
     options: [
-      { arg: "a", describe: "address, like root@localhost:22" },
-      { arg: "n", describe: "name of alias" },
+      { arg: "a", describe: "address, like root@localhost:22, auto add to ansible lists" },
+      { arg: "n", describe: "name of alias, should be sshIP" },
       { arg: "l", describe: "list grouped address for ansible use", boolean: true },
       { arg: "E", describe: "edit ansible list", boolean: true },
       { arg: "r", describe: "refresh keygen token", boolean: true },
@@ -320,14 +320,16 @@ new ucmd("ssh", "address")
     if (argv.l) return cmd(`u ansible -l`);
     if (argv.E) return cmd(`u ansible -E`);
 
+    if (!argv.n) return console.log("ansible unique name not specified");
+    let { user, addr, port } = util.sshGrep(argv.a);
+    cmd(`u ansible ${argv.n} -a=${argv.a}`);
+
     let keygen = "ssh-keygen -t rsa -b 4096";
     if (argv.r) cmd(keygen);
     cmd(`if ! [ -f $HOME/.ssh/id_rsa ]; then ${keygen}; fi;`);
 
-    let { user, addr, port } = util.sshGrep(argv.a);
-
     cmd(`ssh-copy-id -i ~/.ssh/id_rsa.pub -p ${port} ${user}@${addr}`);
-    if (argv.n) cmd(`u quick ssh${argv.n} "ssh -p ${port} ${user}@${addr}"`);
+    cmd(`u quick ${argv.n} "ssh -p ${port} ${user}@${addr}"`);
   });
 
 new ucmd("process", "name")
@@ -1083,7 +1085,7 @@ new ucmd("ansible", "name", "command")
     ],
   })
   .perform(async (argv) => {
-    let hostLoc = "~/.application/ansible/hosts";
+    let hostLoc = process.env.HOME + `/.application/ansible/hosts`;
     if (!fs.existsSync(hostLoc)) fs.mkdirSync(paths.dirname(hostLoc), { recursive: true });
     let hostname = argv.n;
     let playbookdir = __dirname + "/playbook.yml";
@@ -1092,15 +1094,17 @@ new ucmd("ansible", "name", "command")
 
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
-      if (u.contains(content, argv.a)) return console.log(`already contained ${argv.a}`);
+      let { user, addr, port } = util.sshGrep(argv.a);
+
+      if (u.contains(content, addr)) return console.log(`ansible already has ${addr}`);
       let contentMap = iniParser.parse(content);
 
-      contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [argv.a]: true } });
+      contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [addr]: true } });
 
       if (!u.contains(u.mapKeys(contentMap, hostname + ":vars")))
         contentMap[hostname + ":vars"] = {
-          ansible_user: "root",
-          ansible_port: "22",
+          ansible_user: user,
+          ansible_port: port,
         };
 
       let str = u.reSub(iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
