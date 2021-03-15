@@ -1264,6 +1264,7 @@ new ucmd("helper")
       { arg: "e", describe: "edit with code", boolean: true },
       { arg: "s", describe: "software needs to be preinstalled" },
       { arg: "u", describe: "update package", boolean: true },
+      { arg: "R", describe: "remove the package", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -1276,6 +1277,11 @@ new ucmd("helper")
         desktop: `wget -O - https://truth1984.github.io/testSites/s/desktop.sh | bash`,
       });
     if (argv.u) return cmd(`cd ${projectPath} && rm -rf package-lock.json && git pull && npm i`);
+    if (argv.R)
+      return cmdq({ "Uninstall ? (N/y)": false }).then((ans) => {
+        if (ans == "y" || ans == "Y") return cmd(`rm -rf ${projectPath}`);
+      });
+
     let list = {
       git: {
         "branch create": "git branch $name",
