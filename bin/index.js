@@ -1120,6 +1120,7 @@ new ucmd("ansible", "name", "command")
     }
 
     if (argv.c) {
+      argv.c = u.stringReplace(argv.c, { "\\$HOME": "~" });
       return cmd(
         `${preconfig} ansible-playbook ${debugmode} ${invLoc} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
         true
