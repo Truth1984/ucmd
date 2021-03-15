@@ -1191,6 +1191,69 @@ new ucmd("exist", "path")
     return console.log(true);
   });
 
+new ucmd("rpush", "to whom", "from file", "to file")
+  .describer({
+    main: "rsync push with ansible",
+    options: [
+      { arg: "w", describe: "to whom to push to" },
+      { arg: "s", describe: "the path of source file" },
+      { arg: "t", describe: "the path of target file" },
+      {
+        arg: "e",
+        describe: "exclude file",
+        default: '"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"',
+      },
+    ],
+  })
+  .perform((argv) => {
+    let source = argv.s;
+    let target = argv.t;
+
+    let users = u.stringToArray(cmd(`u ssh -L=${argv.w}`, false, true).replace("\n", ""), ",").filter((a) => a != "");
+
+    let exclude = `--exclude={${argv.e}}`;
+
+    for (let i of users) {
+      let data = u.stringToJson(cmd(`ansible-inventory --host ${i}`, false, true));
+      let port = data.ansible_port ? data.ansible_port : 22;
+      let username = data.ansible_user ? data.ansible_user : "root";
+      cmd(`rsync -aAXvz -e 'ssh -p ${port}' ${exclude} ${source} ${username + "@" + i}:'${target}'`, true);
+    }
+  });
+
+new ucmd("rpull", "from whom", "from file", "to file")
+  .describer({
+    main: "rsync pull with ansible",
+    options: [
+      { arg: "w", describe: "to whom to pull from" },
+      { arg: "s", describe: "the path of source file" },
+      { arg: "t", describe: "the path of target file" },
+      {
+        arg: "e",
+        describe: "exclude file",
+        default: '"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"',
+      },
+    ],
+  })
+  .perform((argv) => {
+    let source = argv.s;
+    let target = argv.t;
+
+    let users = u.stringToArray(cmd(`u ssh -L=${argv.w}`, false, true).replace("\n", ""), ",").filter((a) => a != "");
+
+    let exclude = `--exclude={${argv.e}}`;
+
+    for (let i of users) {
+      let data = u.stringToJson(cmd(`ansible-inventory --host ${i}`, false, true));
+      let port = data.ansible_port ? data.ansible_port : 22;
+      let username = data.ansible_user ? data.ansible_user : "root";
+
+      let targetdir = paths.resolve(__dirname, target, i);
+      fs.mkdirSync(targetdir, { recursive: true });
+      cmd(`rsync -aAXvz -e 'ssh -p ${port}' ${exclude} ${username + "@" + i}:'${source}' ${targetdir}`, true);
+    }
+  });
+
 new ucmd("dep")
   .describer({
     main: "dependency repo modify",
