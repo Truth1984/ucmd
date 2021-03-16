@@ -313,18 +313,22 @@ new ucmd("ssh", "address", "name")
       { arg: "n", describe: "name of alias, should be sshIP" },
       { arg: "l", describe: "list grouped address for ansible use" },
       { arg: "L", describe: "list parsed and separated by ," },
+      { arg: "D", describe: "describe each ip in details with ansible", boolean: true },
       { arg: "E", describe: "edit ansible list", boolean: true },
       { arg: "r", describe: "refresh keygen token", boolean: true },
     ],
   })
   .perform((argv) => {
-    if (argv.l) return cmd(`u ansible -l=${argv.l == true ? "all" : argv.l}`);
+    if (argv.l) return util.ansibleGetUserRawEcho(argv.l);
     if (argv.E) return cmd(`u ansible -E`);
-
-    if (argv.L) {
-      let parse = (line) => u.stringReplace(line, { "\n": ",", " ": "", ",$": "" });
-      return console.log(parse(cmd(`u ansible -l=${argv.L == true ? "all" : argv.L} | tail -n +2`, false, true)));
+    if (argv.D) {
+      let result = {};
+      let users = util.ansibleGetUserList(argv.D);
+      for (let i of users) result[i] = util.ansibleInventoryData(i);
+      return console.log(result);
     }
+
+    if (argv.L) return console.log(util.ansibleGetUserList(argv.L));
 
     if (!argv.n) return console.log("ansible unique name not specified");
     let { user, addr, port } = util.sshGrep(argv.a);
@@ -1093,16 +1097,16 @@ new ucmd("ansible", "name", "command")
     ],
   })
   .perform(async (argv) => {
-    let hostLoc = process.env.HOME + `/.application/ansible/hosts`;
+    let hostLoc = util.ansibleConf.inventory_location;
     if (!fs.existsSync(hostLoc)) {
       fs.mkdirSync(paths.dirname(hostLoc), { recursive: true });
       fs.writeFileSync(hostLoc, "");
     }
     let hostname = argv.n;
-    let playbookdir = __dirname + "/playbook.yml";
+    let playbookdir = util.ansibleConf.playbookdir;
     let debugmode = argv.D ? "-vvv" : "";
-    let preconfig = "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks";
-    let invLoc = `-i ${hostLoc}`;
+    let preconfig =
+      "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks ANSIBLE_DEPRECATION_WARNINGS=False";
 
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
@@ -1117,6 +1121,8 @@ new ucmd("ansible", "name", "command")
         contentMap[hostname + ":vars"] = {
           ansible_user: user,
           ansible_port: port,
+          u_name: `"${hostname}"`,
+          u_describe: `""`,
         };
 
       let str = u.reSub(iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
@@ -1127,25 +1133,23 @@ new ucmd("ansible", "name", "command")
     if (argv.c) {
       argv.c = u.stringReplace(argv.c, { "\\$HOME": "~" });
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} ${invLoc} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
+        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
         true
       );
     }
 
     if (argv.s) {
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} ${invLoc} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
+        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
           argv.s
         )}' ${playbookdir}`,
         true
       );
     }
 
-    if (argv.l == true) return cmd(`ansible ${invLoc} --list-hosts all`);
-    if (argv.l) return cmd(`ansible ${invLoc} --list-hosts ${argv.l}`);
-
+    if (argv.l) return util.ansibleGetUserRawEcho(argv.l == true ? "all" : argv.l);
     if (argv.C) return cmd(`sudo cat ${hostLoc}`);
-    if (argv.E) return cmd(`sudo nano ${hostLoc}`);
+    if (argv.E) return cmd(`nano ${hostLoc}`);
   });
 
 new ucmd("eval", "line")
@@ -1215,12 +1219,12 @@ new ucmd("rpush", "to whom", "from file", "to file")
     let source = argv.s;
     let target = argv.t;
 
-    let users = u.stringToArray(cmd(`u ssh -L=${argv.w}`, false, true).replace("\n", ""), ",").filter((a) => a != "");
+    let users = util.ansibleGetUserList(argv.w);
 
     let exclude = `--exclude={${argv.e}}`;
 
     for (let i of users) {
-      let data = u.stringToJson(cmd(`ansible-inventory --host ${i}`, false, true));
+      let data = util.ansibleInventoryData(i);
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
       cmd(`rsync -aAXvz -e 'ssh -p ${port}' ${exclude} ${source} ${username + "@" + i}:'${target}'`, true);
@@ -1245,12 +1249,12 @@ new ucmd("rpull", "from whom", "from file", "to file")
     let source = argv.s;
     let target = argv.t;
 
-    let users = u.stringToArray(cmd(`u ssh -L=${argv.w}`, false, true).replace("\n", ""), ",").filter((a) => a != "");
+    let users = util.ansibleGetUserList(argv.w);
 
     let exclude = `--exclude={${argv.e}}`;
 
     for (let i of users) {
-      let data = u.stringToJson(cmd(`ansible-inventory --host ${i}`, false, true));
+      let data = util.ansibleInventoryData(i);
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
 

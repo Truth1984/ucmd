@@ -1,4 +1,5 @@
-var cmdq = require("../helper/_cmdQs");
+const cmd = require("./_cmd");
+const cmdq = require("../helper/_cmdQs");
 const u = require("awadau");
 
 let util = {};
@@ -39,6 +40,36 @@ util.sshGrep = (str) => {
     addr = str;
   }
   return { user, addr, port };
+};
+
+util.ansibleConf = {
+  inventory_location: process.env.HOME + `/.application/ansible/hosts`,
+  playbookdir: __dirname + "/../bin/playbook.yml",
+};
+
+util.ansibleGetUserRawEcho = (pattern = "all") => {
+  if (pattern == true) pattern = "all";
+  return cmd(`ansible -i ${util.ansibleConf.inventory_location} --list-hosts ${pattern}`);
+};
+
+util.ansibleGetUserList = (pattern = "all") => {
+  if (pattern == true) pattern = "all";
+  let rawline = cmd(
+    `ansible -i ${util.ansibleConf.inventory_location} --list-hosts ${pattern} | tail -n +2`,
+    false,
+    true
+  );
+  return u.stringToArray(u.stringReplace(rawline, { "\n": ",", " ": "", ",$": "" }), ",").filter((a) => a != "");
+};
+
+util.ansibleInventoryData = (pattern = "all") => {
+  if (pattern == true) pattern = "all";
+  return u.stringToJson(
+    u.isBadAssign(
+      cmd(`ansible-inventory -i ${util.ansibleConf.inventory_location} --host ${pattern}`, false, true),
+      "{}"
+    )
+  );
 };
 
 module.exports = util;
