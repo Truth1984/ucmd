@@ -1130,8 +1130,8 @@ new ucmd("ansible", "name", "command")
         contentMap[hostname + ":vars"] = {
           ansible_user: user,
           ansible_port: port,
-          u_name: `"${hostname}"`,
-          u_describe: `""`,
+          u_name: "${hostname}",
+          u_describe: "",
         };
 
       let str = u.reSub(iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
