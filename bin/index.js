@@ -1094,7 +1094,10 @@ new ucmd("ansible", "name", "command")
   })
   .perform(async (argv) => {
     let hostLoc = process.env.HOME + `/.application/ansible/hosts`;
-    if (!fs.existsSync(hostLoc)) fs.mkdirSync(paths.dirname(hostLoc), { recursive: true });
+    if (!fs.existsSync(hostLoc)) {
+      fs.mkdirSync(paths.dirname(hostLoc), { recursive: true });
+      fs.writeFileSync(hostLoc, "");
+    }
     let hostname = argv.n;
     let playbookdir = __dirname + "/playbook.yml";
     let debugmode = argv.D ? "-vvv" : "";
