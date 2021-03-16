@@ -349,6 +349,7 @@ new ucmd("process", "name")
       { arg: "l", describe: "Log output with strace, using PID" },
       { arg: "K", describe: "kill relevant process" },
       { arg: "d", describe: "directory of running process, require pid" },
+      { arg: "D", describe: "detailed directory or file system of target process, require pid" },
     ],
   })
   .perform((argv) => {
@@ -363,6 +364,7 @@ new ucmd("process", "name")
       return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
     }
     if (argv.d) return cmd(`sudo pwdx ${argv.d}`);
+    if (argv.D) return cmd(`sudo lsof -p ${argv.D}`);
     return cmd(base);
   });
 
@@ -1396,12 +1398,6 @@ new ucmd("helper")
       ssh: {
         config: "nano /etc/ssh/sshd_config",
         restart: "u service -r=ssh",
-      },
-
-      backup: {
-        script:
-          'sudo rsync -aAXv / --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"} /dest',
-        transfer: "rsync --progress -avuzh user@host:/source/path/copyfrom user@host:/destination/path/dumpto",
       },
       hostname: {
         view: "hostnamectl",
