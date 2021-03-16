@@ -313,12 +313,13 @@ new ucmd("ssh", "address", "name")
       { arg: "n", describe: "name of alias, should be sshIP" },
       { arg: "l", describe: "list grouped address for ansible use" },
       { arg: "L", describe: "list parsed and separated by ," },
+      { arg: "c", describe: "connect to the target host by pattern" },
       { arg: "D", describe: "describe each ip in details with ansible", boolean: true },
       { arg: "E", describe: "edit ansible list", boolean: true },
       { arg: "r", describe: "refresh keygen token", boolean: true },
     ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
     if (argv.l) return util.ansibleGetUserRawEcho(argv.l);
     if (argv.E) return cmd(`u ansible -E`);
     if (argv.D) {
@@ -326,6 +327,14 @@ new ucmd("ssh", "address", "name")
       let users = util.ansibleGetUserList(argv.D);
       for (let i of users) result[i] = util.ansibleInventoryData(i);
       return console.log(result);
+    }
+
+    if (argv.c) {
+      let users = util.ansibleGetUserList(argv.c);
+      let target = u.len(users) > 1 ? await util.multiSelect(users) : users[0];
+      let invdata = util.ansibleInventoryData(target);
+      console.log(`connecting to <${target}>, as <${invdata.u_describe}>`);
+      return cmd(`ssh -p ${invdata.ansible_port} ${invdata.ansible_user}@${target}`);
     }
 
     if (argv.L) return console.log(util.ansibleGetUserList(argv.L));
@@ -1148,7 +1157,7 @@ new ucmd("ansible", "name", "command")
     }
 
     if (argv.l) return util.ansibleGetUserRawEcho(argv.l == true ? "all" : argv.l);
-    if (argv.C) return cmd(`sudo cat ${hostLoc}`);
+    if (argv.C) return cmd(`cat ${hostLoc}`);
     if (argv.E) return cmd(`nano ${hostLoc}`);
   });
 
