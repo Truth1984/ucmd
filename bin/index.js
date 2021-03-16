@@ -1130,7 +1130,7 @@ new ucmd("ansible", "name", "command")
         contentMap[hostname + ":vars"] = {
           ansible_user: user,
           ansible_port: port,
-          u_name: "${hostname}",
+          u_name: `${hostname}`,
           u_describe: "",
         };
 
