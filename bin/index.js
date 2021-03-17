@@ -34,10 +34,6 @@ let fileExistProcess = (file) => {
   return file;
 };
 
-let checkOS = (name) => {
-  return cmd(`u os ${name}`, false, true).trim() == "true";
-};
-
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
@@ -261,6 +257,7 @@ new ucmd("sysinfo", "target")
       { arg: "t", describe: "target", default: "." },
       { arg: "s", describe: "size of file" },
       { arg: "h", describe: "hardware information", boolean: true },
+      { arg: "b", describe: "basic info", boolean: true },
       { arg: "l", describe: "large file on this directory" },
     ],
   })
@@ -268,6 +265,21 @@ new ucmd("sysinfo", "target")
     if (argv.s) return cmd(`du -sh ${argv.s}`);
     if (argv.h) return cmd("df -Th");
     if (argv.l) return cmd("du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
+    if (argv.b) {
+      let basic = {
+        freeMem: os.freemem() / 1024 / 1024 + "MB",
+        totalMem: os.totalmem() / 1024 / 1024 + "MB",
+        totalCpu: os.cpus().length,
+      };
+      if (util.checkOS("linux")) {
+        let df = u.stringToJson(cmd(`u result -j "df -m"`, false, true));
+        let dfResult = df.filter((item) => item.Filesystem != "overlay" && u.int(item["1M-blocks"]) > 10000);
+        basic["fs"] = dfResult;
+      }
+
+      return console.log(basic);
+    }
+
     if (fs.lstatSync(argv.t).isDirectory()) return cmd(`cd ${argv.t} && ls -alFh`);
     else return cmd(`stat ${argv.t}`);
   });
@@ -305,12 +317,13 @@ new ucmd("mount", "target")
     }
   });
 
-new ucmd("ssh", "address", "name")
+new ucmd("ssh", "address", "name", "description")
   .describer({
     main: "use keygen to generate key pairs",
     options: [
       { arg: "a", describe: "address, like root@localhost:22, auto add to ansible lists" },
       { arg: "n", describe: "name of alias, should be sshIP" },
+      { arg: "A", describe: "description of alias" },
       { arg: "l", describe: "list grouped address for ansible use" },
       { arg: "L", describe: "list parsed and separated by ," },
       { arg: "c", describe: "connect to the target host by pattern" },
@@ -341,7 +354,8 @@ new ucmd("ssh", "address", "name")
 
     if (!argv.n) return console.log("ansible unique name not specified");
     let { user, addr, port } = util.sshGrep(argv.a);
-    cmd(`u ansible ${argv.n} -a=${argv.a}`);
+    let description = argv.A ? `-A=${argv.A} ` : "";
+    cmd(`u ansible ${argv.n} -a=${argv.a} ${description}`);
 
     let keygen = "ssh-keygen -t rsa -b 4096";
     if (argv.r) cmd(keygen);
@@ -1099,6 +1113,7 @@ new ucmd("ansible", "name", "command")
       { arg: "c", describe: "command to run on target machine" },
       { arg: "s", describe: "script to run on the target machine" },
       { arg: "a", describe: "add host to hosts file" },
+      { arg: "A", describe: "add description to hosts file " },
       { arg: "l", describe: "list hosts, can be pattern" },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
@@ -1126,12 +1141,15 @@ new ucmd("ansible", "name", "command")
 
       contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [addr]: true } });
 
+      let ipIdentify = util.privateIPPattern.test(addr) ? "local" : "remote";
+      if (!contentMap[ipIdentify]) contentMap = u.mapMerge({ [ipIdentify]: {} }, contentMap);
+      if (!u.contains(contentMap[ipIdentify], addr)) contentMap[ipIdentify][addr] = true;
       if (!u.contains(u.mapKeys(contentMap, hostname + ":vars")))
         contentMap[hostname + ":vars"] = {
           ansible_user: user,
           ansible_port: port,
           u_name: `${hostname}`,
-          u_describe: "",
+          u_describe: argv.A ? argv.A : "",
         };
 
       let str = u.reSub(iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
@@ -1179,6 +1197,7 @@ new ucmd("result", "cmd")
       { arg: "f", describe: "full output as 2>&1", boolean: true },
       { arg: "h", describe: "head to skip by number of lines" },
       { arg: "t", describe: "tail to skip by number of lines" },
+      { arg: "j", describe: "json stringify result", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -1190,7 +1209,8 @@ new ucmd("result", "cmd")
     let result = cmd(command, false, true);
     if (u.contains(result, "||")) result = shellParser(result, { separator: "||" });
     else result = shellParser(result);
-    console.log(result);
+    if (argv.j) return console.log(u.jsonToString(result));
+    else return console.log(result);
   });
 
 new ucmd("exist", "path")
@@ -1252,6 +1272,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
         describe: "exclude file",
         default: '"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"',
       },
+      { arg: "S", describe: "put the rsync process inside a screen process" },
     ],
   })
   .perform((argv) => {
@@ -1320,14 +1341,14 @@ new ucmd("os", "is")
       return console.log(u.contains(content, argv.i));
     }
     if (argv.v) {
-      if (checkOS("linux")) return cmd("env -i bash -c '. /etc/os-release; echo $VERSION_ID'");
-      if (checkOS("win")) return console.log(os.version());
-      if (checkOS("mac")) return cmd("sw_vers -productVersion");
+      if (util.checkOS("linux")) return cmd("env -i bash -c '. /etc/os-release; echo $VERSION_ID'");
+      if (util.checkOS("win")) return console.log(os.version());
+      if (util.checkOS("mac")) return cmd("sw_vers -productVersion");
     }
 
     if (argv.c) {
-      if (checkOS("ubuntu")) return cmd(`env -i bash -c '. /etc/os-release; echo $VERSION_CODENAME'`);
-      if (checkOS("debian")) return cmd(`dpkg --status tzdata|grep Provides|cut -f2 -d'-'`);
+      if (util.checkOS("ubuntu")) return cmd(`env -i bash -c '. /etc/os-release; echo $VERSION_CODENAME'`);
+      if (util.checkOS("debian")) return cmd(`dpkg --status tzdata|grep Provides|cut -f2 -d'-'`);
     }
 
     console.log({

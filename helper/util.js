@@ -22,6 +22,10 @@ util.multiSelect = async (listsOrStr, index = 0, logfirst = true, exit = true) =
   });
 };
 
+util.checkOS = (name) => cmd(`u os ${name}`, false, true).trim() == "true";
+
+util.privateIPPattern = /(^127\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)/;
+
 util.sshGrep = (str) => {
   let user = "root";
   let addr = "";
