@@ -58,6 +58,7 @@ util.ansibleGetUserRawEcho = (pattern = "all") => {
 
 util.ansibleGetUserList = (pattern = "all") => {
   if (pattern == true) pattern = "all";
+  if (u.reCommonFast().ipv4.test(pattern)) return [pattern];
   let rawline = cmd(
     `ansible -i ${util.ansibleConf.inventory_location} --list-hosts ${pattern} | tail -n +2`,
     false,

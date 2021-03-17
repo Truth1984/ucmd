@@ -1250,13 +1250,13 @@ new ucmd("rpush", "to whom", "from file", "to file")
 
     let users = util.ansibleGetUserList(argv.w);
 
-    let exclude = `--exclude={${argv.e}}`;
+    let opt = `--exclude={${argv.e}}`;
 
     for (let i of users) {
       let data = util.ansibleInventoryData(i);
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
-      cmd(`rsync -aAXvz -e 'ssh -p ${port}' ${exclude} ${source} ${username + "@" + i}:'${target}'`, true);
+      cmd(`rsync -aAXvzPh -e 'ssh -p ${port}' ${opt} ${source} ${username + "@" + i}:'${target}'`, true);
     }
   });
 
@@ -1272,7 +1272,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
         describe: "exclude file",
         default: '"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"',
       },
-      { arg: "S", describe: "put the rsync process inside a screen process" },
+      { arg: "D", describe: "delete file after transfer", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -1281,7 +1281,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
 
     let users = util.ansibleGetUserList(argv.w);
 
-    let exclude = `--exclude={${argv.e}}`;
+    let opt = `--exclude={${argv.e}} ${argv.D ? "--delete " : ""}`;
 
     for (let i of users) {
       let data = util.ansibleInventoryData(i);
@@ -1290,7 +1290,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
 
       let targetdir = paths.resolve(__dirname, target, i);
       fs.mkdirSync(targetdir, { recursive: true });
-      cmd(`rsync -aAXvz -e 'ssh -p ${port}' ${exclude} ${username + "@" + i}:'${source}' ${targetdir}`, true);
+      cmd(`rsync -aAXvzPh -e 'ssh -p ${port}' ${opt} ${username + "@" + i}:'${source}' ${targetdir}`, true);
     }
   });
 
