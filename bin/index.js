@@ -273,7 +273,13 @@ new ucmd("sysinfo", "target")
       };
       if (util.checkOS("linux")) {
         let df = u.stringToJson(cmd(`u result -j "df -m"`, false, true));
-        let dfResult = df.filter((item) => item.Filesystem != "overlay" && u.int(item["1M-blocks"]) > 10000);
+        let dfResult = df.filter(
+          (item) =>
+            item.Filesystem != "overlay" &&
+            !u.contains(item.Filesystem, "dev") &&
+            !u.contains(item.Filesystem, "tmp") &&
+            u.int(item["1M-blocks"]) > 10000
+        );
         basic["fs"] = dfResult;
       }
 
