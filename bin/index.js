@@ -1388,7 +1388,7 @@ new ucmd("helper")
     if (argv.u) return cmd(`cd ${projectPath} && rm -rf package-lock.json && git pull && npm i`);
     if (argv.R)
       return cmdq({ "Uninstall ? (N/y)": false }).then((ans) => {
-        if (ans == "y" || ans == "Y") return cmd(`rm -rf ${projectPath}`);
+        if (ans == "y" || ans == "Y") return cmd(`rm -rf ${projectPath} && `);
       });
 
     let list = {
