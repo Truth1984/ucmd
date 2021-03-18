@@ -517,7 +517,7 @@ new ucmd("addPath", "name", "value")
     let target = `>> ~/.bash_mine`;
     if (argv.o) return cmd("nano ~/.bash_mine");
     if (!(argv.a || argv.e || argv.p || argv.d)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
-    if (!argv.d && !argv.n) return console.log("exit:1 name of the path undefined");
+    if (!argv.d && !argv.n) return util.cmderr("name of the path undefined", "addPath");
     if ((argv.a || argv.e) && !argv.v) return console.log("exit:1 value of the path undefined");
     if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
     if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
@@ -816,7 +816,7 @@ new ucmd("iptable")
       );
 
     if (argv.S) {
-      if (argv.S == true) return console.log("internet interface not specified");
+      if (argv.S == true) return util.cmderr("internet interface not specified", "iptable");
       //portscan
       return cmd(`sudo iptables -N LOGPSCAN
       sudo iptables -A LOGPSCAN -p tcp --syn -m limit --limit 2000/hour -j RETURN
@@ -1312,7 +1312,7 @@ new ucmd("dep")
     let pkgPath = "";
     if (fs.existsSync("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
     if (fs.existsSync("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
-    if (pkgPath == "") return console.log("platform not supported");
+    if (pkgPath == "") return util.cmderr("platform not supported on this os", "dep");
     let full = () => readdirp.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
     if (argv.l) return full().then(console.log);
     if (argv.r) {

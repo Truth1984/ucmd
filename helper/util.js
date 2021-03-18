@@ -46,6 +46,11 @@ util.sshGrep = (str) => {
   return { user, addr, port };
 };
 
+util.cmderr = (msg, location, exitCode = 1, exit = true) => {
+  console.log("Error:", `<${location}>`, msg);
+  if (exit) process.exit(exitCode);
+};
+
 util.ansibleConf = {
   inventory_location: process.env.HOME + `/.application/ansible/hosts`,
   playbookdir: __dirname + "/../bin/playbook.yml",
