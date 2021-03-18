@@ -671,7 +671,6 @@ new ucmd("docker")
       { arg: "l", describe: "logs path of container" },
       { arg: "L", describe: "live log" },
       { arg: "v", describe: "volume listing" },
-      { arg: "V", describe: "create volume to target location as $dir,$deviceName=local2,$type=xfs" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "remove container" },
       { arg: "R", describe: "remove container and its volume" },
@@ -691,14 +690,6 @@ new ucmd("docker")
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.v) cmd(`sudo docker volume ls`);
-    if (argv.V) {
-      let result = u.stringToArray(argv.V, ",");
-      result[1] = u.isBadAssign(result[1], "local2");
-      result[2] = u.isBadAssign(result[2], "xfs");
-      return cmd(
-        `sudo docker volume create --driver local --opt device=${result[0]} --opt type=${result[2]} ${result[1]}`
-      );
-    }
     if (argv.e)
       cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} /bin/bash`);
     if (argv.E) cmd(`sudo docker exec -it ${argv.E} /bin/bash`);
