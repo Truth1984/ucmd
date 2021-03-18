@@ -177,7 +177,7 @@ new ucmd("sf", "content", "basedir")
     if (!argv.A && argv.i) line += `--ignore={${argv.i}} `;
     if (argv.A) line += "--unrestricted ";
 
-    line += `${argv.c} ${argv.b}`;
+    line += `'${argv.c}' ${argv.b}`;
     return cmd(line);
   });
 
@@ -358,7 +358,7 @@ new ucmd("ssh", "address", "name", "description")
 
     if (argv.L) return console.log(util.ansibleGetUserList(argv.L));
 
-    if (!argv.n) return console.log("ansible unique name not specified");
+    if (!argv.n) return util.cmderr("ansible unique name not specified", "ansible");
     let { user, addr, port } = util.sshGrep(argv.a);
     let description = argv.A ? `-A=${argv.A} ` : "";
     cmd(`u ansible ${argv.n} -a=${argv.a} ${description}`);
@@ -414,12 +414,12 @@ new ucmd("gitclone", "name", "user")
   })
   .perform((argv) => {
     if (argv.i) {
-      if (!fs.existsSync(".git")) return console.log("Error: git folder not found");
+      if (!fs.existsSync(".git")) return util.cmderr("git folder not found", "gitclone");
       return cmd(`cp -a $DIR/gitfile/. ./`);
     }
 
     if (argv.D) {
-      if (!fs.existsSync("package.json")) return console.log("Error: package.json not found");
+      if (!fs.existsSync("package.json")) return util.cmderr("package.json not found", "gitclone");
       return cmd(`bash <(curl -s https://truth1984.github.io/testSites/node/prep.sh)`);
     }
     let user = argv.u;
@@ -439,7 +439,7 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     ],
   })
   .perform((argv) => {
-    if (!argv.l) return console.log("location not specified");
+    if (!argv.l) return util.cmderr("location not specified", "gitwatch");
     cmd("mkdir -p $UDATA/log");
     cmd("mkdir -p $UDATA/gitwatch");
     cmd("mkdir -p $UDATA/cron");
@@ -460,7 +460,8 @@ new ucmd("gitwatch", "location", "branchName", "interval")
       return cmd("crontab " + stored);
     }
 
-    if (content.indexOf(screenName) > -1) return console.log(screenName, "already exist, modify by using crontab -e");
+    if (content.indexOf(screenName) > -1)
+      return util.cmderr(screenName + " already exist, modify by using crontab -e", "gitwatch");
 
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
     let scriptContent = `cd ${argv.l}
@@ -516,9 +517,8 @@ new ucmd("addPath", "name", "value")
   .perform((argv) => {
     let target = `>> ~/.bash_mine`;
     if (argv.o) return cmd("nano ~/.bash_mine");
-    if (!(argv.a || argv.e || argv.p || argv.d)) console.log("argument empty, -a as alias, -e as $, -p as sbin");
     if (!argv.d && !argv.n) return util.cmderr("name of the path undefined", "addPath");
-    if ((argv.a || argv.e) && !argv.v) return console.log("exit:1 value of the path undefined");
+    if ((argv.a || argv.e) && !argv.v) return util.cmderr("value of the path undefined", "addPath");
     if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
     if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
     if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
@@ -671,6 +671,7 @@ new ucmd("docker")
       { arg: "l", describe: "logs path of container" },
       { arg: "L", describe: "live log" },
       { arg: "v", describe: "volume listing" },
+      { arg: "V", describe: "create volume to target location as $dir,$deviceName=local2,$type=xfs" },
       { arg: "n", describe: "network status" },
       { arg: "r", describe: "remove container" },
       { arg: "R", describe: "remove container and its volume" },
@@ -690,6 +691,14 @@ new ucmd("docker")
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.v) cmd(`sudo docker volume ls`);
+    if (argv.V) {
+      let result = u.stringToArray(argv.V, ",");
+      result[1] = u.isBadAssign(result[1], "local2");
+      result[2] = u.isBadAssign(result[2], "xfs");
+      return cmd(
+        `sudo docker volume create --driver local --opt device=${result[0]} --opt type=${result[2]} ${result[1]}`
+      );
+    }
     if (argv.e)
       cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} /bin/bash`);
     if (argv.E) cmd(`sudo docker exec -it ${argv.E} /bin/bash`);
@@ -865,7 +874,7 @@ new ucmd("pkgjson", "name", "script")
   .perform((argv) => {
     let path = "package.json";
     if (!fs.existsSync(path)) path = "../package.json";
-    if (!fs.existsSync(path)) return console.error("Error: package.json file does not exist");
+    if (!fs.existsSync(path)) return util.cmderr("package.json file does not exist", "pkgjson");
     let data = JSON.parse(fs.readFileSync(path).toString());
     if (argv.h) return console.log(data["scripts"][argv.h] != undefined);
     if (argv.l) return console.log(data["scripts"]);
@@ -1043,7 +1052,7 @@ new ucmd("usermod", "group", "user")
       return cmd(
         `sudo usermod -aG docker ${argv.u} && sudo chown "${argv.u}":"${argv.u}" /home/"${argv.u}"/.docker -R`
       );
-    if (argv.g == undefined) return console.log("group undefined");
+    if (!argv.g) return util.cmderr("group undefined", "usermod");
     if (argv.i) return cmd(`sudo usermod -aG ${argv.g} ${argv.u}`, true);
     if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
   });
