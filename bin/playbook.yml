@@ -8,7 +8,7 @@
         cmd: "{{apb_shell | expanduser}}"
       register: apb_shell_output
       retries: 5
-      until: apb_shell_output.rc == 0 and apb_shell_output.stderr.find("error") == -1
+      until: apb_shell_output.rc == 0 and apb_shell_output.stderr.find("error") == -1 and apb_shell_output.stderr.find("fatal") == -1
       delay: 1
       when: apb_runtype == "shell"
 
@@ -26,7 +26,7 @@
       ansible.builtin.script: "{{apb_script | expanduser}}"
       register: apb_script_output
       retries: 5
-      until: apb_script_output.rc == 0 and apb_script_output.stderr.find("error") == -1
+      until: apb_script_output.rc == 0 and apb_script_output.stderr.find("error") == -1 and apb_script_output.stderr.find("fatal") == -1
       delay: 1
       when: apb_runtype == "script"
 
