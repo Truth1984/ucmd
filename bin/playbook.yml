@@ -16,8 +16,10 @@
         msg:
           - name:{{u_name | default("")}}
           - describe:{{u_describe | default("")}}
-          - stdout:{{ apb_shell_output.stdout }}
-          - stderr:{{ apb_shell_output.stderr }}
+          - "stdout:"
+          - "{{ apb_shell_output.stdout_lines }}"
+          - "stderr:"
+          - "{{ apb_shell_output.stderr_lines }}"
       when: apb_runtype == "shell"
 
     - name: running script
@@ -32,6 +34,8 @@
         msg:
           - name:{{u_name | default("")}}
           - describe:{{u_describe | default("")}}
-          - stdout:{{ apb_script_output.stdout }}
-          - stderr:{{ apb_script_output.stderr }}
+          - "stdout:"
+          - "{{ apb_script_output.stdout }}"
+          - "stderr:"
+          - "{{ apb_script_output.stderr }}"
       when: apb_runtype == "script"
