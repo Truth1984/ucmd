@@ -74,13 +74,17 @@ util.ansibleGetUserList = (pattern = "all") => {
 
 util.ansibleInventoryData = (pattern = "all") => {
   if (pattern == true) pattern = "all";
-  if (u.reCommonFast().ipv4.test(pattern)) return [pattern];
-  return u.stringToJson(
-    u.isBadAssign(
-      cmd(`ansible-inventory -i ${util.ansibleConf.inventory_location} --host ${pattern}`, false, true),
-      "{}"
-    )
-  );
+
+  let result = cmd(`ansible-inventory -i ${util.ansibleConf.inventory_location} --host ${pattern}`, false, true, true);
+  if (result.status == 0) return u.stringToJson(result.stdout);
+
+  let { user, port } = util.sshGrep(pattern);
+  return {
+    u_name: "unknown",
+    u_describe: "unknown",
+    ansible_user: user,
+    ansible_port: port,
+  };
 };
 
 module.exports = util;
