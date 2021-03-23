@@ -74,6 +74,7 @@ util.ansibleGetUserList = (pattern = "all") => {
 
 util.ansibleInventoryData = (pattern = "all") => {
   if (pattern == true) pattern = "all";
+  if (u.reCommonFast().ipv4.test(pattern)) return [pattern];
   return u.stringToJson(
     u.isBadAssign(
       cmd(`ansible-inventory -i ${util.ansibleConf.inventory_location} --host ${pattern}`, false, true),
