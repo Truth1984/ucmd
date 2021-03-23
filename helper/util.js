@@ -78,12 +78,13 @@ util.ansibleInventoryData = (pattern = "all") => {
   let result = cmd(`ansible-inventory -i ${util.ansibleConf.inventory_location} --host ${pattern}`, false, true, true);
   if (result.status == 0) return u.stringToJson(result.stdout);
 
-  let { user, port } = util.sshGrep(pattern);
+  let { user, port, addr } = util.sshGrep(pattern);
   return {
     u_name: "unknown",
     u_describe: "unknown",
     ansible_user: user,
     ansible_port: port,
+    addr,
   };
 };
 

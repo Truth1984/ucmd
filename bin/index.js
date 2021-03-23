@@ -347,10 +347,10 @@ new ucmd("ssh", "address", "name", "description")
 
     if (argv.c) {
       let users = util.ansibleGetUserList(argv.c);
-      let target = u.len(users) > 1 ? await util.multiSelect(users) : util.sshGrep(users[0]).addr;
+      let target = u.len(users) > 1 ? await util.multiSelect(users) : users[0];
       let invdata = util.ansibleInventoryData(target);
       console.log(`connecting to <${target}>, as <${invdata.u_describe}>`);
-      return cmd(`ssh -p ${invdata.ansible_port} ${invdata.ansible_user}@${target}`);
+      return cmd(`ssh -p ${invdata.ansible_port} ${invdata.ansible_user}@${invdata.addr ? invdata.addr : target}`);
     }
 
     if (argv.L) return console.log(util.ansibleGetUserList(argv.L));
