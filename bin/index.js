@@ -1073,7 +1073,7 @@ new ucmd("link", "name")
 
 new ucmd("install", "name")
   .describer({
-    main: "install command on different platform",
+    main: "install or upgrade command on different platform",
     options: [
       { arg: "n", describe: "name of the package" },
       { arg: "l", describe: "list installed package", boolean: true },
