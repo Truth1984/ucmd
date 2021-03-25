@@ -1,6 +1,6 @@
 {
   "name": "ucmd",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "quick bash cmd alias",
   "main": "./bin/index.js",
   "scripts": {
@@ -30,6 +30,7 @@
     "download": "^7.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "ini": "^1.3.5",
+    "os-utils": "^0.0.14",
     "readdirp": "^3.3.0",
     "yamljs": "^0.3.0",
     "yargs": "^14.2.0"

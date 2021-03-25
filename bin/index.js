@@ -6,6 +6,7 @@ var cmdq = require("../helper/_cmdQs");
 var download = require("../helper/downloader");
 var recorder = require("../helper/quickRecord");
 var os = require("os");
+var osu = require("os-utils");
 var fs = require("fs");
 var readdirp = require("readdirp");
 var paths = require("path");
@@ -264,15 +265,18 @@ new ucmd("sysinfo", "target")
       { arg: "l", describe: "large file on this directory" },
     ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
     if (argv.s) return cmd(`du -sh ${argv.s}`);
     if (argv.h) return cmd("df -Th");
     if (argv.l) return cmd("du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
     if (argv.b) {
+      const cpup = new Promise((r) => osu.cpuUsage((p) => r(p)));
       let basic = {
         freeMem: os.freemem() / 1024 / 1024 + "MB",
         totalMem: os.totalmem() / 1024 / 1024 + "MB",
+        "freeMem%": osu.freememPercentage() * 100,
         totalCpu: os.cpus().length,
+        "cpu%": (await cpup) * 100,
       };
       if (util.checkOS("linux")) {
         let df = u.stringToJson(cmd(`u result -j "df -m"`, false, true));
