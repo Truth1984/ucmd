@@ -651,7 +651,7 @@ new ucmd("retry", "cmd")
             console.log(result.stderr.toString().trim());
             return Promise.reject();
           } else {
-            return console.log(u.stringReplace(result.stdout.toString().trim()));
+            return console.log(result.stdout.toString().trim());
           }
         },
         argv.t,
@@ -1029,6 +1029,45 @@ new ucmd("ini", "file")
     }
   });
 
+new ucmd("git")
+  .describer({
+    main: "git command integration",
+    options: [
+      { arg: "t", describe: "to which branch, move HEAD" },
+      { arg: "i", describe: "initialize proper branches, add test and dev", boolean: true },
+      { arg: "S", describe: "sync from remote branch, option: master | test" },
+      { arg: "m", describe: "move branch to target commit id, as $branchName,$id" },
+      { arg: "M", describe: "move refs to target commit id, as $refName, $id" },
+      { arg: "L", describe: "silence log", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let adog = () => cmd("git log --all --decorate --oneline --graph");
+
+    if (argv.t) cmd(`git checkout ${argv.t}`);
+    if (argv.i) {
+      cmd("git checkout -b test master && git checkout -b dev test");
+      cmd("git checkout test && git push --set-upstream origin test");
+      cmd("git checkout dev && git push --set-upstream origin dev");
+    }
+    if (argv.S) {
+      if (argv.S == "master") cmd("git checkout master && git pull origin test");
+      if (argv.S == "test") cmd("git checkout test && git pull origin dev");
+    }
+    if (argv.m) {
+      let arr = u.stringToArray(argv.m, ",");
+      if (!arr[1]) return util.cmderr("move $branchName,$id not defined", "git");
+      cmd(`git checkout ${arr[0]} && git reset --hard ${arr[1]}`);
+    }
+    if (argv.M) {
+      let arr = u.stringToArray(argv.M, ",");
+      if (!arr[1]) return util.cmderr("move $refName,$id not defined", "git");
+      cmd(`git push --force origin ${arr[1]}:refs/heads/${arr[0]}`);
+    }
+
+    if (!argv.L) return adog();
+  });
+
 new ucmd("usermod", "group", "user")
   .describer({
     main: "use usermod to assign privilege to particular user, take effect after reboot",
@@ -1398,8 +1437,6 @@ new ucmd("helper")
 
     let list = {
       git: {
-        "branch create": "git branch $name",
-        "branch ls": "git branch",
         "branch remove": "git branch -d $name",
         "graph adog": "git log --all --decorate --oneline --graph",
         "pull on target directory": "git -C $location pull",
