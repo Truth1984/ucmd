@@ -40,6 +40,7 @@ new ucmd("port", "portnum")
     options: [
       { arg: "p", describe: "port number or process name" },
       { arg: "d", describe: "docker container port" },
+      { arg: "c", describe: "connection details" },
     ],
   })
   .perform((argv) => {
@@ -51,6 +52,8 @@ new ucmd("port", "portnum")
       if (argv.d == true) return cmd(`sudo docker ps --format "{{.Ports}}\t:\t{{.Image}}"`);
       else return cmd(`sudo docker ps | grep  ${argv.d}`);
     }
+    if (argv.c) return cmd(`sudo lsof -i :${argv.c}`);
+
     if (!argv.p) return cmd("sudo netstat -plntu");
     return cmd("sudo netstat -lntup | grep " + argv.p);
   });
