@@ -254,7 +254,7 @@ new ucmd("search", "target", "basedir")
     else console.log(result);
   });
 
-new ucmd("sysinfo", "target")
+new ucmd("sys", "target")
   .describer({
     main: "display system information",
     options: [
@@ -263,12 +263,15 @@ new ucmd("sysinfo", "target")
       { arg: "h", describe: "hardware information", boolean: true },
       { arg: "b", describe: "basic info", boolean: true },
       { arg: "l", describe: "large file on this directory" },
+      { arg: "L", describe: "large file on this directory, but add grep support" },
     ],
   })
   .perform(async (argv) => {
     if (argv.s) return cmd(`du -sh ${argv.s}`);
     if (argv.h) return cmd("df -Th");
-    if (argv.l) return cmd("du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
+    if (argv.l)
+      return cmd("sudo du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
+    if (argv.L) return cmd(`sudo du -ahx . | sort -rh | grep ${argv.L} | head -n 30`);
     if (argv.b) {
       const cpup = new Promise((r) => osu.cpuUsage((p) => r(p)));
       let basic = {
@@ -1467,10 +1470,6 @@ new ucmd("helper")
         "interfaces example":
           "iface $name inet static:\n\tnetmask 255.255.255.0\n\tgateway 192.168.x.1\n\taddress 192.168.x.x",
         "restart network": "sudo service network-manager restart",
-      },
-      scp: {
-        download: "scp user@remote_host:remote_file local_file",
-        upload: "scp local_file user@remote_host:remote_file",
       },
       bash: {
         scriptDir: 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"',
