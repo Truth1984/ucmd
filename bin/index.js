@@ -645,12 +645,14 @@ new ucmd("retry", "cmd")
   })
   .perform(async (argv) => {
     // [ $? -eq 0 ] && echo "$cmd command was successful" || echo "$cmd failed"
+    let remain = argv.t;
     await u
       .promiseTryTimes(
         () => {
           let result = cmd(argv.c, false, true, true);
           if (result.status > 0) {
-            console.log("retrying ...", u.dateFormat("datetime"), argv.t + " times remain", argv.c);
+            remain -= 1;
+            console.log("retrying ...", u.dateFormat("datetime"), remain + " times remain", argv.c);
             console.log(result.stderr.toString().trim());
             return Promise.reject();
           } else {
