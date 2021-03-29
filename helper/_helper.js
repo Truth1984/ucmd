@@ -49,6 +49,7 @@ module.exports = class ucmd {
   }
 
   run() {
+    yargs = yargs.parserConfiguration({ "parse-numbers": false });
     for (let i of middleware) yargs = yargs.command(...i);
     yargs.argv;
     return this;

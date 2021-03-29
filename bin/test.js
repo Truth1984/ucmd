@@ -20,3 +20,8 @@ new ucmd("_ask").describer({ main: "asking test" }).perform((argv) => {
 new ucmd("_do", "task")
   .describer({ main: "pipe task", options: [{ arg: "t", describe: "task to pipe", alias: "pipe" }] })
   .perform((argv) => cmd(argv.t));
+
+new ucmd("_echo", "line").describer({ main: "echo cmd", options: [{ arg: "l", describe: "line" }] }).perform((argv) => {
+  console.log(argv.l);
+  cmd(`echo '${argv.l}'`);
+});
