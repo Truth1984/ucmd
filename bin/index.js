@@ -650,7 +650,7 @@ new ucmd("retry", "cmd")
         () => {
           let result = cmd(argv.c, false, true, true);
           if (result.status > 0) {
-            console.log("retry ...", argv.c);
+            console.log("retrying ...", u.dateFormat("datetime"), argv.t + " times remain", argv.c);
             console.log(result.stderr.toString().trim());
             return Promise.reject();
           } else {
