@@ -651,12 +651,12 @@ new ucmd("retry", "cmd")
         () => {
           let result = cmd(argv.c, false, true, true);
           if (result.status > 0) {
+            console.log("retrying ...", u.dateFormat("plain"), remain + " times remain", argv.c);
             remain -= 1;
-            console.log("retrying ...", u.dateFormat("datetime"), remain + " times remain", argv.c);
             console.log(result.stderr.toString().trim());
             return Promise.reject();
           } else {
-            return console.log(result.stdout.toString().trim());
+            return console.log("Successful", result.stdout.toString().trim());
           }
         },
         argv.t,
@@ -1039,10 +1039,12 @@ new ucmd("git")
     main: "git command integration",
     options: [
       { arg: "t", describe: "to which branch, move HEAD" },
+      { arg: "b", describe: "initialize new branch, and jump to that branch" },
       { arg: "i", describe: "initialize proper branches, add test and dev", boolean: true },
       { arg: "S", describe: "sync from remote branch, option: master | test" },
       { arg: "m", describe: "move branch to target commit id, as $branchName,$id" },
       { arg: "M", describe: "move refs to target commit id, as $refName, $id" },
+      { arg: "r", describe: "remove $branchName, locally and remotely" },
       { arg: "L", describe: "silence log", boolean: true },
     ],
   })
@@ -1050,6 +1052,7 @@ new ucmd("git")
     let adog = () => cmd("git log --all --decorate --oneline --graph");
 
     if (argv.t) cmd(`git checkout ${argv.t}`);
+    if (argv.b) cmd(`git branch ${argv.b} && git checkout ${argv.b}`);
     if (argv.i) {
       cmd("git checkout -b test master && git checkout -b dev test");
       cmd("git checkout test && git push --set-upstream origin test");
@@ -1068,6 +1071,12 @@ new ucmd("git")
       let arr = u.stringToArray(argv.M, ",");
       if (!arr[1]) return util.cmderr("move $refName,$id not defined", "git");
       cmd(`git push --force origin ${arr[1]}:refs/heads/${arr[0]}`);
+    }
+    if (argv.r) {
+      console.log(`deleting local branch`, argv.r);
+      cmd(`git branch -d ${argv.r}`);
+      console.log(`deleting remote branch`, argv.r);
+      cmd(`git push origin --delete ${argv.r}`);
     }
 
     if (!argv.L) return adog();

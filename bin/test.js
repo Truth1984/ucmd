@@ -25,3 +25,5 @@ new ucmd("_echo", "line").describer({ main: "echo cmd", options: [{ arg: "l", de
   console.log(argv.l);
   cmd(`echo '${argv.l}'`);
 });
+
+new ucmd("_debug").describer({ main: "debug mode" }).perform((argv) => console.log("UDEBUG=1"));

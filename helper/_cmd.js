@@ -5,7 +5,7 @@ let UDATA = process.env.HOME + "/.application";
 let DIR = __dirname + "/..";
 
 module.exports = (scripts, log, returnable = false, full = false) => {
-  if (log) console.log(scripts);
+  if (log || process.env.UDEBUG) console.log(scripts);
   let cmdarray = scripts.split(" ");
   return full
     ? spawnSync(cmdarray.shift(), cmdarray, {
