@@ -1455,6 +1455,11 @@ new ucmd("helper")
         "graph adog": "git log --all --decorate --oneline --graph",
         "pull on target directory": "git -C $location pull",
         "first time config": "git config --global user.name $name && git config --global user.email $email",
+        proxy: {
+          get: "git config --global --get http.proxy",
+          del: "git config --global --unset http.proxy",
+          set: "git config --global http.proxy http://addr:port",
+        },
       },
       crontab: {
         edit: "sudo crontab -e",
