@@ -340,6 +340,7 @@ new ucmd("ssh", "address", "name", "description")
       { arg: "l", describe: "list grouped address for ansible use" },
       { arg: "L", describe: "list parsed and separated by ," },
       { arg: "c", describe: "connect to the target host by pattern" },
+      { arg: "p", describe: "proxy socks5 to $host,$localport=15542" },
       { arg: "D", describe: "describe each ip in details with ansible", boolean: true },
       { arg: "E", describe: "edit ansible list", boolean: true },
       { arg: "r", describe: "refresh keygen token", boolean: true },
@@ -361,6 +362,20 @@ new ucmd("ssh", "address", "name", "description")
       let invdata = util.ansibleInventoryData(target);
       console.log(`connecting to <${target}>, as <${invdata.u_describe}>`);
       return cmd(`ssh -p ${invdata.ansible_port} ${invdata.ansible_user}@${invdata.addr ? invdata.addr : target}`);
+    }
+
+    if (argv.p) {
+      let infoArr = u.stringToArray(argv.p, ",");
+      let localPort = infoArr[1] ? infoArr[1] : 15542;
+      let users = util.ansibleGetUserList(infoArr[0]);
+      let target = u.len(users) > 1 ? await util.multiSelect(users) : users[0];
+      let invdata = util.ansibleInventoryData(target);
+      console.log("use screen to persist connection on port", localPort);
+      return cmd(
+        `ssh -4 -p ${invdata.ansible_port} -D ${localPort} -N ${invdata.ansible_user}@${
+          invdata.addr ? invdata.addr : target
+        }`
+      );
     }
 
     if (argv.L) return console.log(util.ansibleGetUserList(argv.L));
@@ -1178,6 +1193,7 @@ new ucmd("ansible", "name", "command")
       { arg: "a", describe: "add host to hosts file" },
       { arg: "A", describe: "add description to hosts file " },
       { arg: "l", describe: "list hosts, can be pattern" },
+      { arg: "P", describe: "proxy client setup, require http://user:pass@proxy:port" },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
       { arg: "E", describe: "edit the host file", boolean: true },
