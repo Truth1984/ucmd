@@ -1193,7 +1193,7 @@ new ucmd("ansible", "name", "command")
       { arg: "a", describe: "add host to hosts file" },
       { arg: "A", describe: "add description to hosts file " },
       { arg: "l", describe: "list hosts, can be pattern" },
-      { arg: "P", describe: "proxy client setup, require http://user:pass@proxy:port" },
+      { arg: "p", describe: "proxy address, require http://user:pass@proxy:port" },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
       { arg: "E", describe: "edit the host file", boolean: true },
@@ -1210,7 +1210,7 @@ new ucmd("ansible", "name", "command")
     let debugmode = argv.D ? "-vvv" : "";
     let preconfig =
       "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks ANSIBLE_DEPRECATION_WARNINGS=False";
-
+    let proxy = argv.p ? argv.p : "''";
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
       let { user, addr, port } = util.sshGrep(argv.a);
@@ -1239,14 +1239,14 @@ new ucmd("ansible", "name", "command")
     if (argv.c) {
       argv.c = u.stringReplace(argv.c, { "\\$HOME": "~" });
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
+        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_http_proxy=${proxy} -e apb_runtype=shell -e "apb_shell='${argv.c}'" ${playbookdir}`,
         true
       );
     }
 
     if (argv.s) {
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_runtype=script -e apb_script='${paths.resolve(
+        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_http_proxy=${proxy} -e apb_runtype=script -e apb_script='${paths.resolve(
           argv.s
         )}' ${playbookdir}`,
         true
