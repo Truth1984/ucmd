@@ -1059,7 +1059,8 @@ new ucmd("git")
       { arg: "S", describe: "sync from remote branch, option: master | test" },
       { arg: "m", describe: "move branch to target commit id, as $branchName,$id" },
       { arg: "M", describe: "move refs to target commit id, as $refName, $id" },
-      { arg: "r", describe: "remove $branchName, locally and remotely" },
+      { arg: "r", describe: "remove $branchName, locally" },
+      { arg: "R", describe: "remove $branchName, locally and remotely" },
       { arg: "L", describe: "silence log", boolean: true },
     ],
   })
@@ -1088,6 +1089,10 @@ new ucmd("git")
       cmd(`git push --force origin ${arr[1]}:refs/heads/${arr[0]}`);
     }
     if (argv.r) {
+      console.log(`deleting local branch`, argv.r);
+      cmd(`git branch -d ${argv.r}`);
+    }
+    if (argv.R) {
       console.log(`deleting local branch`, argv.r);
       cmd(`git branch -d ${argv.r}`);
       console.log(`deleting remote branch`, argv.r);
