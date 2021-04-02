@@ -1198,7 +1198,7 @@ new ucmd("ansible", "name", "command")
       { arg: "a", describe: "add host to hosts file" },
       { arg: "A", describe: "add description to hosts file " },
       { arg: "l", describe: "list hosts, can be pattern" },
-      { arg: "p", describe: "proxy address, require http://user:pass@proxy:port" },
+      { arg: "p", describe: "proxy address, define $u_proxy in .bash_env http://user:pass@proxy:port", boolean: true },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
       { arg: "E", describe: "edit the host file", boolean: true },
@@ -1215,7 +1215,7 @@ new ucmd("ansible", "name", "command")
     let debugmode = argv.D ? "-vvv" : "";
     let preconfig =
       "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks ANSIBLE_DEPRECATION_WARNINGS=False";
-    let proxy = argv.p ? argv.p : "''";
+    let proxy = argv.p ? process.env.u_proxy : "''";
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
       let { user, addr, port } = util.sshGrep(argv.a);
