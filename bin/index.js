@@ -1093,10 +1093,10 @@ new ucmd("git")
       cmd(`git branch -d ${argv.r}`);
     }
     if (argv.R) {
-      console.log(`deleting local branch`, argv.r);
-      cmd(`git branch -d ${argv.r}`);
-      console.log(`deleting remote branch`, argv.r);
-      cmd(`git push origin --delete ${argv.r}`);
+      console.log(`deleting local branch`, argv.R);
+      cmd(`git branch -d ${argv.R}`);
+      console.log(`deleting remote branch`, argv.R);
+      cmd(`git push origin --delete ${argv.R}`);
     }
 
     if (!argv.L) return adog();
