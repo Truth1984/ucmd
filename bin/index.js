@@ -1059,6 +1059,7 @@ new ucmd("git")
       { arg: "S", describe: "sync from remote branch, option: master | test" },
       { arg: "m", describe: "move branch to target commit id, as $branchName,$id" },
       { arg: "M", describe: "move refs to target commit id, as $refName, $id" },
+      { arg: "A", describe: "add changes as Rebase CURRENT -> HEAD as $newbranch -> $oldbranch " },
       { arg: "r", describe: "remove $branchName, locally" },
       { arg: "R", describe: "remove $branchName, locally and remotely" },
       { arg: "L", describe: "silence log", boolean: true },
@@ -1087,6 +1088,11 @@ new ucmd("git")
       let arr = u.stringToArray(argv.M, ",");
       if (!arr[1]) return util.cmderr("move $refName,$id not defined", "git");
       cmd(`git push --force origin ${arr[1]}:refs/heads/${arr[0]}`);
+    }
+    if (argv.A) {
+      let arr = u.stringToArray(argv.A, ",");
+      if (!arr[1]) cmd(`git rebase ${arr[0]}`);
+      else cmd(`git rebase ${arr[0]} ${arr[1]}`);
     }
     if (argv.r) {
       console.log(`deleting local branch`, argv.r);
