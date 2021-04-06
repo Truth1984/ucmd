@@ -660,19 +660,13 @@ new ucmd("retry", "cmd")
   })
   .perform(async (argv) => {
     // [ $? -eq 0 ] && echo "$cmd command was successful" || echo "$cmd failed"
-    let remain = argv.t;
     await u
-      .promiseTryTimes(
-        () => {
+      .promiseTryTimesInfo(
+        (err, remain) => {
+          if (err) console.log("retrying ...", u.dateFormat("plain"), remain + " times remain", argv.c, "\n" + err);
           let result = cmd(argv.c, false, true, true);
-          if (result.status > 0) {
-            console.log("retrying ...", u.dateFormat("plain"), remain + " times remain", argv.c);
-            remain -= 1;
-            console.log(result.stderr.toString().trim());
-            return Promise.reject();
-          } else {
-            return console.log("Successful", result.stdout.toString().trim());
-          }
+          if (result.status > 0) return Promise.reject(result.stderr.toString().trim());
+          else return console.log(result.stdout.toString().trim());
         },
         argv.t,
         argv.i
@@ -1237,7 +1231,7 @@ new ucmd("ansible", "name", "command")
 
       contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [addr]: true } });
 
-      let ipIdentify = util.privateIPPattern.test(addr) ? "local" : "remote";
+      let ipIdentify = u.reCommonFast().iplocal.test(addr) ? "local" : "remote";
       if (!contentMap[ipIdentify]) contentMap = u.mapMerge({ [ipIdentify]: {} }, contentMap);
       if (!u.contains(contentMap[ipIdentify], addr)) contentMap[ipIdentify][addr] = true;
       if (!u.contains(u.mapKeys(contentMap, hostname + ":vars")))
