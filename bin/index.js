@@ -1384,7 +1384,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
 
-      let targetdir = paths.resolve(__dirname, target, i);
+      let targetdir = paths.resolve(process.env.PWD, target, i);
       fs.mkdirSync(targetdir, { recursive: true });
       cmd(`rsync -aAXvzPh -e 'ssh -p ${port}' ${opt} ${username + "@" + i}:'${source}' ${targetdir}`, true);
     }
