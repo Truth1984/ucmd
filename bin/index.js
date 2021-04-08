@@ -80,10 +80,7 @@ new ucmd("network", "device")
   })
   .perform((argv) => {
     if (argv.l) return cmd("sudo netstat -i");
-    if (argv.t) {
-      if (argv.d) return cmd(`sudo tcpdump -i ${argv.d}`);
-      return cmd(`sudo tcpdump`);
-    }
+    if (argv.t) return cmd(`sudo tcpdump ${argv.t ? "-i" + argv.t : ""}`);
     if (argv.d) return cmd("sudo nethogs " + argv.d);
     return cmd("sudo nethogs -s");
   });
@@ -153,12 +150,12 @@ new ucmd("quick", "name", "cmd")
     if (argv.c) return recorder.record(argv.n, argv.c);
     if (argv.n) {
       let result = recorder.perform(argv.n);
-      return result
-        ? cmd(
-            argv.a ? (result.indexOf("...") > -1 ? result.replace("...", argv.a) : result + " " + argv.a) : result,
-            true
-          )
-        : "";
+      let cmdline = argv.a
+        ? result.indexOf("...") > -1
+          ? result.replace("...", argv.a)
+          : result + " " + argv.a
+        : result;
+      return result ? cmd(cmdline, true) : "";
     }
     if (argv.r) return recorder.remove(argv.r);
   });
@@ -1457,7 +1454,7 @@ new ucmd("helper")
     options: [
       { arg: "n", describe: "name" },
       { arg: "e", describe: "edit with code", boolean: true },
-      { arg: "s", describe: "software needs to be preinstalled" },
+      { arg: "s", describe: "software needs to be preinstalled", boolean: true },
       { arg: "u", describe: "update package", boolean: true },
       { arg: "R", describe: "remove the package", boolean: true },
     ],
