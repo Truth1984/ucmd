@@ -771,7 +771,10 @@ new ucmd("dc")
     if (argv.l === true) argv.l = await loadKeys();
     if (argv.L === true) argv.L = await loadKeys();
 
-    if (argv.u) return cmd(`sudo docker-compose --env-file ${u.typeCheck(argv.u, "str") ? argv.u : ".env"} up -d`);
+    if (argv.u) {
+      if (fs.existsSync("docker-compose.yml") && !fs.existsSync(".env")) cmd(`touch .env`);
+      return cmd(`sudo docker-compose --env-file ${u.typeCheck(argv.u, "str") ? argv.u : ".env"} up -d`);
+    }
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
     if (argv.i) return cmd("sudo docker-compose images");
     if (argv.b) return cmd("sudo docker-compose build --force-rm");
@@ -973,8 +976,7 @@ new ucmd("backup", "file")
     }
 
     argv.f = fileExistProcess(argv.f);
-    let time = u.dateCurrent();
-    let filename = paths.basename(argv.f) + [time.year, time.month, time.day, time.hour, time.minute].join("-");
+    let filename = paths.basename(argv.f) + u.dateFormat("plain");
 
     backupJson[filename] = argv.f;
     cmd(`cp ${argv.f} ${process.env.HOME}/.application/backup/${filename}`);
