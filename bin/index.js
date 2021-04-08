@@ -1203,7 +1203,11 @@ new ucmd("ansible", "name", "command")
       { arg: "a", describe: "add host to hosts file" },
       { arg: "A", describe: "add description to hosts file " },
       { arg: "l", describe: "list hosts, can be pattern" },
-      { arg: "p", describe: "proxy address, define $u_proxy in .bash_env http://user:pass@proxy:port", boolean: true },
+      {
+        arg: "p",
+        describe: "proxy address, define $u_proxy in .bash_env http://user:pass@proxy:port, and fire up proxy server",
+        boolean: true,
+      },
       { arg: "D", describe: "debug mode", boolean: true },
       { arg: "C", describe: "cat the file", boolean: true },
       { arg: "E", describe: "edit the host file", boolean: true },
@@ -1392,20 +1396,19 @@ new ucmd("dep")
     ],
   })
   .perform((argv) => {
-    let pkgPath = "";
+    let pkgPath;
     if (fs.existsSync("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
     if (fs.existsSync("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
-    if (pkgPath == "") return util.cmderr("platform not supported on this os", "dep");
+    if (!pkgPath) return util.cmderr("platform not supported on this os", "dep");
     let full = () => readdirp.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
     if (argv.l) return full().then(console.log);
-    if (argv.r) {
+    if (argv.r)
       return full().then(async (d) => {
         let processed = d.filter((i) => u.contains(i, argv.r));
         let target = await util.multiSelect(processed);
         cmd(`u backup ${target}`);
         cmd(`sudo rm -rf ${target}`);
       });
-    }
   });
 
 new ucmd("os", "is")
