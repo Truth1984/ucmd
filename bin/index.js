@@ -1352,7 +1352,9 @@ new ucmd("rpush", "to whom", "from file", "to file")
       let data = util.ansibleInventoryData(i);
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
-      cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${source} ${username + "@" + i}:'${target}'`, true);
+      let addr = data.addr ? data.addr : i;
+
+      cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${source} ${username + "@" + addr}:'${target}'`, true);
     }
   });
 
@@ -1384,13 +1386,14 @@ new ucmd("rpull", "from whom", "from file", "to file")
       let data = util.ansibleInventoryData(i);
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
+      let addr = data.addr ? data.addr : i;
 
       let rArg = "-aAXvPh";
       if (argv.C) rArg += "z";
 
       let targetdir = paths.resolve(process.env.PWD, target, i);
       fs.mkdirSync(targetdir, { recursive: true });
-      cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${username + "@" + i}:'${source}' ${targetdir}`, true);
+      cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${username + "@" + addr}:'${source}' ${targetdir}`, true);
     }
   });
 
