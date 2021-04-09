@@ -1335,6 +1335,7 @@ new ucmd("rpush", "to whom", "from file", "to file")
         describe: "exclude file",
         default: '"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"',
       },
+      { arg: "C", describe: "compression, -z option, might be slower", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -1344,12 +1345,14 @@ new ucmd("rpush", "to whom", "from file", "to file")
     let users = util.ansibleGetUserList(argv.w);
 
     let opt = `--exclude={${argv.e}}`;
+    let rArg = "-aAXvPh";
+    if (argv.C) rArg += "z";
 
     for (let i of users) {
       let data = util.ansibleInventoryData(i);
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
-      cmd(`rsync -aAXvzPh -e 'ssh -p ${port}' ${opt} ${source} ${username + "@" + i}:'${target}'`, true);
+      cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${source} ${username + "@" + i}:'${target}'`, true);
     }
   });
 
@@ -1366,6 +1369,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
         default: '"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found","/dest"',
       },
       { arg: "D", describe: "delete file after transfer", boolean: true },
+      { arg: "C", describe: "compression, -z option, might be slower", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -1381,9 +1385,12 @@ new ucmd("rpull", "from whom", "from file", "to file")
       let port = data.ansible_port ? data.ansible_port : 22;
       let username = data.ansible_user ? data.ansible_user : "root";
 
+      let rArg = "-aAXvPh";
+      if (argv.C) rArg += "z";
+
       let targetdir = paths.resolve(process.env.PWD, target, i);
       fs.mkdirSync(targetdir, { recursive: true });
-      cmd(`rsync -aAXvzPh -e 'ssh -p ${port}' ${opt} ${username + "@" + i}:'${source}' ${targetdir}`, true);
+      cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${username + "@" + i}:'${source}' ${targetdir}`, true);
     }
   });
 
