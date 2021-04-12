@@ -298,7 +298,7 @@ new ucmd("mount", "target")
   .describer({
     main: "mount or unmount a device, use `mkfs.ext4 /dev/target` to change type",
     options: [
-      { arg: "m", describe: "mount target" },
+      { arg: "m", describe: "mount target, may change name to /dev/$name" },
       { arg: "u", describe: "unmount target" },
       { arg: "i", describe: "information of mounting" },
       { arg: "I", describe: "unmounted information" },
