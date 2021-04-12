@@ -69,6 +69,20 @@ new ucmd("ip")
     cmd("ifconfig | grep inet", true);
   });
 
+new ucmd("scan", "ip", "port")
+  .describer({
+    main: "probe target machine",
+    options: [
+      { arg: "i", describe: "ip to probe" },
+      { arg: "A", describe: "all ports", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let ip = argv.i;
+    if (argv.A) return cmd(`nmap -Pn- ${ip}`);
+    cmd(`nmap -p- ${ip}`);
+  });
+
 new ucmd("network", "device")
   .describer({
     main: "display live network",
