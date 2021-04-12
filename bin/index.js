@@ -259,6 +259,7 @@ new ucmd("sys", "target")
       { arg: "s", describe: "size of file" },
       { arg: "h", describe: "hardware information", boolean: true },
       { arg: "b", describe: "basic info", boolean: true },
+      { arg: "B", describe: "basic info with details", boolean: true },
       { arg: "l", describe: "large file on this directory" },
       { arg: "L", describe: "large file on this directory, but add grep support" },
     ],
@@ -269,6 +270,7 @@ new ucmd("sys", "target")
     if (argv.l)
       return cmd("sudo du -ahx . | sort -rh | head -n " + (Number.isNaN(Number.parseInt(argv.l)) ? 20 : argv.l));
     if (argv.L) return cmd(`sudo du -ahx . | sort -rh | grep ${argv.L} | head -n 30`);
+    if (argv.B) return cmd(`cat /proc/cpuinfo && cat /proc/meminfo`);
     if (argv.b) {
       const cpup = new Promise((r) => osu.cpuUsage((p) => r(p)));
       let basic = {
