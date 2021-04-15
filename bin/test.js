@@ -27,3 +27,16 @@ new ucmd("_echo", "line").describer({ main: "echo cmd", options: [{ arg: "l", de
 });
 
 new ucmd("_debug").describer({ main: "debug mode" }).perform((argv) => console.log("UDEBUG=1"));
+
+new ucmd("_webtest", "port")
+  .describer({
+    main: "test docker",
+    options: [
+      { arg: "p", describe: "port to open", default: "8080" },
+      { arg: "r", describe: "remove service" },
+    ],
+  })
+  .perform((argv) => {
+    if (argv.r) return cmd(`u docker -r=web-test`);
+    if (argv.p) return cmd(`sudo docker run -d --name web-test -p ${argv.p}:8000 crccheck/hello-world`);
+  });
