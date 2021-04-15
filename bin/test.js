@@ -34,9 +34,14 @@ new ucmd("_webtest", "port")
     options: [
       { arg: "p", describe: "port to open", default: "8080" },
       { arg: "r", describe: "remove service" },
+      { arg: "e", describe: "execute inside target container" },
     ],
   })
   .perform((argv) => {
     if (argv.r) return cmd(`u docker -r=web-test`);
-    if (argv.p) return cmd(`sudo docker run -d --name web-test -p ${argv.p}:8000 crccheck/hello-world`);
+    if (argv.e) return cmd(`u docker -e=web-test,sh`);
+
+    return cmd(
+      `sudo docker run -d --name web-test --add-host=host.docker.internal:host-gateway -p ${argv.p}:8000 crccheck/hello-world`
+    );
   });

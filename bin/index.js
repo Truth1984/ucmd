@@ -706,7 +706,7 @@ new ucmd("docker")
       { arg: "r", describe: "remove container" },
       { arg: "R", describe: "remove container and its volume" },
       { arg: "e", describe: "execute or run with bash" },
-      { arg: "E", describe: "execute directly with bash" },
+      { arg: "E", describe: "execute directly with bash,$or target" },
       { arg: "T", describe: "transfer file with save or load, can be $i:ver or i_ver.tar, better define ver" },
     ],
   })
@@ -721,9 +721,19 @@ new ucmd("docker")
     if (argv.l) cmd(`sudo docker inspect --format={{.LogPath}} ${argv.l}`);
     if (argv.L) cmd(`sudo docker logs -f ${argv.L}`);
     if (argv.v) cmd(`sudo docker volume ls`);
-    if (argv.e)
-      cmd(`sudo docker $(sudo docker ps | grep -q ${argv.e} && echo "exec" || echo "run") -it ${argv.e} /bin/bash`);
-    if (argv.E) cmd(`sudo docker exec -it ${argv.E} /bin/bash`);
+    if (argv.e) {
+      let result = u.stringToArray(argv.e, ",");
+      cmd(
+        `sudo docker $(sudo docker ps | grep -q ${result[0]} && echo "exec" || echo "run") -it ${result[0]} ${
+          result[1] ? result[1] : "/bin/bash"
+        }`
+      );
+    }
+
+    if (argv.E) {
+      let result = u.stringToArray(argv.E, ",");
+      cmd(`sudo docker exec -it ${result[0]} ${result[1] ? result[1] : "/bin/bash"}`);
+    }
     if (argv.b) {
       argv.b = u.stringToArray(argv.b, ",");
       let sentence = "sudo docker image build ";
