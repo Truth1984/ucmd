@@ -99,6 +99,37 @@ new ucmd("network", "device")
     return cmd("sudo nethogs -s");
   });
 
+new ucmd("pid", "id")
+  .describer({
+    main: "find system information about the target id",
+    options: [
+      { arg: "p", describe: "pid" },
+      { arg: "s", describe: "systemctl status about target", boolean: true },
+      { arg: "d", describe: "directory of running process", boolean: true },
+      { arg: "P", describe: "process information", boolean: true },
+      { arg: "D", describe: "detailed directory or file system of target process", boolean: true },
+      { arg: "n", describe: "network connection of target pid", boolean: true },
+      { arg: "N", describe: "network port", boolean: true },
+      { arg: "A", describe: "all display", boolean: true },
+      { arg: "l", describe: "log the pid details", boolean: true },
+    ],
+  })
+  .perform((argv) => {
+    let pid = argv.p;
+    let dlog = (describe, line) => {
+      console.log("-----", describe, "-----");
+      return cmd(line);
+    };
+    if (argv.s || argv.A) dlog("systemctl", `sudo systemctl status ${pid}`);
+    if (argv.d || argv.A) dlog("starting directory", `sudo pwdx ${pid}`);
+    if (argv.P || argv.A) dlog("process info", `sudo ps -auxwwf | grep ${pid}`);
+    if (argv.D || argv.A) dlog("detailed info", `sudo lsof -p ${pid}`);
+    if (argv.N || argv.A) dlog("network port", `sudo netstat -plntu | grep ${pid}/`);
+    if (argv.n || argv.A) dlog("established network connection", `sudo lsof -i | grep ${pid}`);
+
+    if (argv.l) return cmd(`sudo strace -p${pid} -s9999 -e write`);
+  });
+
 new ucmd("targz", "path")
   .describer({
     main: "typical tar command",
