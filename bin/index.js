@@ -122,10 +122,10 @@ new ucmd("pid", "id")
     };
     if (argv.s || argv.A) dlog("systemctl", `sudo systemctl status ${pid}`);
     if (argv.d || argv.A) dlog("starting directory", `sudo pwdx ${pid}`);
-    if (argv.P || argv.A) dlog("process info", `sudo ps -auxwwf | grep ${pid}`);
+    if (argv.P || argv.A) dlog("process info (grep)", `sudo ps -auxwwf | grep ${pid}`);
     if (argv.D || argv.A) dlog("detailed info", `sudo lsof -p ${pid}`);
-    if (argv.N || argv.A) dlog("network port", `sudo netstat -plntu | grep ${pid}/`);
-    if (argv.n || argv.A) dlog("established network connection", `sudo lsof -i | grep ${pid}`);
+    if (argv.N || argv.A) dlog("network port (grep)", `sudo netstat -plntu | grep ${pid}/`);
+    if (argv.n || argv.A) dlog("established network connection (grep)", `sudo lsof -i | grep ${pid}`);
 
     if (argv.l) return cmd(`sudo strace -p${pid} -s9999 -e write`);
   });
