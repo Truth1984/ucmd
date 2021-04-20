@@ -687,10 +687,25 @@ new ucmd("service", "name")
     cmd(`sudo systemctl list-units --type service --all`);
   });
 
-new ucmd("hash", "target")
-  .describer({ main: "hash the following string", options: [{ arg: "s", describe: "string of target" }] })
+new ucmd("encode", "line")
+  .describer({
+    main: "use different methods on string",
+    options: [
+      { arg: "l", describe: "line to manipulate" },
+      { arg: "p", describe: "password generation, define length" },
+      { arg: "P", describe: "password generation with auto base64 encode, define length" },
+      { arg: "m", describe: "md5 sum calculate", boolean: true },
+      { arg: "b", describe: "base64 encode", boolean: true },
+      { arg: "B", describe: "base64 decode", boolean: true },
+    ],
+  })
   .perform((argv) => {
-    if (argv.s) return cmd(`echo -n ${argv.s} | md5sum`);
+    let string = argv.l;
+    if (argv.p) return console.log(u.randomPassword(argv.p == true ? 8 : argv.p, 1, 1));
+    if (argv.P) return console.log(Buffer.from(u.randomPassword(argv.P == true ? 8 : argv.P, 1, 1)).toString("base64"));
+    if (argv.m) return cmd(`echo -n ${string} | md5sum`);
+    if (argv.b) console.log(Buffer.from(string).toString("base64"));
+    if (argv.B) return console.log(Buffer.from(string, "base64").toString());
   });
 
 new ucmd("retry", "cmd")
