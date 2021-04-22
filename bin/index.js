@@ -242,7 +242,7 @@ new ucmd("search", "target", "basedir")
       { arg: "a", describe: "output result as an array", boolean: true },
       { arg: "d", describe: "directory only", boolean: true },
       { arg: "f", describe: "file only", boolean: true },
-      { arg: "D", describe: "subdirectory Depth", default: 3 },
+      { arg: "D", describe: "subdirectory Depth", default: 10 },
       {
         arg: "T",
         describe:
