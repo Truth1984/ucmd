@@ -604,11 +604,18 @@ new ucmd("lock", "file")
     options: [
       { arg: "f", describe: "filename to lock" },
       { arg: "u", describe: "unlock file" },
+      { arg: "a", describe: "attribute inspect" },
     ],
   })
   .perform((argv) => {
     if (argv.f) return cmd("sudo chattr +i " + argv.f);
-    if (argv.u) return cmd("sudo chattr -i " + argv.u);
+    if (argv.u) return cmd("sudo chattr -iau" + argv.u);
+    if (argv.a) {
+      console.log(
+        '{"a":"append only","A":"no atime updates","c":"compressed","C":"no copy on write","d":"no dump","D":"synchronous directory updates","e":"block extents","i":"immutable","j":"data journalling","P":"project hierarchy","s":"secure deletion","S":"synchronous updates","t":"no tail merging","T":"top of directory hierarchy","u":"undeletable","E":"compression error","h":"huge file","I":"indexed directory","N":"inline data","X":"compression raw access","Z":"compressed dirty file"}'
+      );
+      return cmd(`lsattr ${argv.a}`);
+    }
   });
 
 new ucmd("saveop", "cmd", "fileLocation")
