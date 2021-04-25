@@ -871,15 +871,12 @@ new ucmd("post", "url", "data")
     options: [
       { arg: "u", describe: "url" },
       { arg: "d", describe: "json data", default: "{}" },
+      { arg: "g", describe: "get request", boolean: true },
     ],
   })
-  .perform((argv) => {
-    argv.u = u.url(argv.u);
-    let agent = '-A "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"';
-    let header = '-H "Content-Type: application/json"';
-
-    cmd(`curl -X POST ${agent} ${header} -d '${parseJson(argv.d)}' ${argv.u}`, true);
-    console.log("");
+  .perform(async (argv) => {
+    let target = argv.g ? u.promiseFetchGet : u.promiseFetchPost;
+    await target(argv.u, parseJson(argv.d)).then(console.log);
   });
 
 new ucmd("iptable")
@@ -1590,6 +1587,7 @@ new ucmd("helper")
         "day 1, 3, 4, 5": "0 0 1,3-5 * *",
         order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
         output: "location: /var/log/syslog",
+        list: "for user in $(cut -f1 -d: /etc/passwd); do echo ---$user--- ;  crontab -u $user -l ; done",
       },
       grep: {
         or: "pattern1\\|pattern2",
