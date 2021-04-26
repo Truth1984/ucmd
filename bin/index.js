@@ -309,6 +309,7 @@ new ucmd("sys", "target")
       { arg: "B", describe: "basic info with details", boolean: true },
       { arg: "l", describe: "large file on this directory" },
       { arg: "L", describe: "large file on this directory, but add grep support" },
+      { arg: "C", describe: "crontab inspect for each user", boolean: true },
     ],
   })
   .perform(async (argv) => {
@@ -339,6 +340,8 @@ new ucmd("sys", "target")
       return console.log(basic);
     }
 
+    if (argv.C)
+      return cmd("for user in $(cut -f1 -d: /etc/passwd); do echo ---$user--- ; sudo crontab -u $user -l ; done");
     if (fs.lstatSync(argv.t).isDirectory()) return cmd(`cd ${argv.t} && ls -alFh`);
     else return cmd(`stat ${argv.t}`);
   });
@@ -1587,7 +1590,6 @@ new ucmd("helper")
         "day 1, 3, 4, 5": "0 0 1,3-5 * *",
         order: "min (0 - 59) | hour (0 - 23) | day of month (1 - 31) | month (1 - 12) | day of week (0 - 6)",
         output: "location: /var/log/syslog",
-        list: "for user in $(cut -f1 -d: /etc/passwd); do echo ---$user--- ;  crontab -u $user -l ; done",
       },
       grep: {
         or: "pattern1\\|pattern2",
