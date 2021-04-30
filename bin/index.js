@@ -351,6 +351,7 @@ new ucmd("mount", "target")
     main: "mount or unmount a device, use `mkfs.ext4 /dev/target` to change type",
     options: [
       { arg: "m", describe: "mount target, may change name to /dev/$name" },
+      { arg: "M", describe: "mount directly to target directory, require $device,$directory" },
       { arg: "u", describe: "unmount target" },
       { arg: "i", describe: "information of mounting" },
       { arg: "I", describe: "unmounted information" },
@@ -365,6 +366,15 @@ new ucmd("mount", "target")
         .filter((i) => i != "");
     };
     if (argv.m) return cmd(`udisksctl mount -b ${argv.m}`, true);
+    if (argv.M) {
+      let mountArr = u.stringToArray(argv.M, ",");
+      let device = mountArr[0];
+      let directory = mountArr[1];
+
+      if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+      return cmd(`sudo mount ${device} ${directory}`);
+    }
+
     if (argv.u) return cmd(`udisksctl unmount -b ${argv.u}`, true);
 
     if (argv.i && argv.i != true) return cmd(`sudo fdisk -l ${argv.i}`);
@@ -1237,6 +1247,7 @@ new ucmd("link", "name")
     return cmd(`sudo -u ${argv.u} ln -s ${cmdPath} ${properPath}/${argv.n}`, true);
   });
 
+// complete
 new ucmd("install", "name")
   .describer({
     main: "install or upgrade command on different platform",
@@ -1353,14 +1364,10 @@ new ucmd("ansible", "name", "command")
     if (argv.E) return cmd(`nano ${hostLoc}`);
   });
 
+//complete
 new ucmd("eval", "line")
-  .describer({
-    main: "eval for nodejs",
-    options: [{ arg: "l", describe: "line to eval" }],
-  })
-  .perform((argv) => {
-    console.log(eval("(" + argv.l + ")"));
-  });
+  .describer({ main: "eval for nodejs", options: [{ arg: "l", describe: "line to eval" }] })
+  .perform((argv) => console.log(eval("(" + argv.l + ")")));
 
 new ucmd("result", "cmd")
   .describer({
