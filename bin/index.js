@@ -2,7 +2,6 @@
 
 var ucmd = require("../helper/_helper");
 var cmd = require("../helper/_cmd");
-var cmdq = require("../helper/_cmdQs");
 var download = require("../helper/downloader");
 var recorder = require("../helper/quickRecord");
 var os = require("os");
@@ -10,10 +9,8 @@ var osu = require("os-utils");
 var fs = require("fs");
 var readdirp = require("readdirp");
 var paths = require("path");
-var shellParser = require("../helper/shell-parser");
-var iniParser = require("ini");
-var yamlParser = require("yamljs");
 var u = require("awadau");
+const cu = require("cmdline-util");
 require("./test");
 
 const util = require("../helper/util");
@@ -439,8 +436,8 @@ new ucmd("ssh", "address", "name", "description")
 
     if (argv.L) return console.log(util.ansibleGetUserList(argv.L));
 
-    if (!argv.n) return util.cmderr("ansible unique name not specified", "ansible");
-    let { user, addr, port } = util.sshGrep(argv.a);
+    if (!argv.n) return cu.cmderr("ansible unique name not specified", "ansible");
+    let { user, addr, port } = cu.sshGrep(argv.a);
     let description = argv.A ? `-A=${argv.A} ` : "";
     cmd(`u ansible ${argv.n} -a=${argv.a} ${description}`);
 
@@ -475,7 +472,7 @@ new ucmd("process", "name")
     if (argv.l) return cmd(`sudo strace -p${argv.l} -s9999 -e write`);
     if (argv.K) {
       let result = cmd(`ps -ae | { head -1; grep ${argv.K}; }`, false, true);
-      return shellParser(result).map((item) => cmd(`kill ${item.PID}`));
+      return cu.shellParser(result).map((item) => cmd(`kill ${item.PID}`));
     }
     if (argv.d) return cmd(`sudo pwdx ${argv.d}`);
     if (argv.D) return cmd(`sudo lsof -p ${argv.D}`);
@@ -542,7 +539,7 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     }
 
     if (content.indexOf(screenName) > -1)
-      return util.cmderr(screenName + " already exist, modify by using crontab -e", "gitwatch");
+      return cu.cmderr(screenName + " already exist, modify by using crontab -e", "gitwatch");
 
     cmd(`touch ${scriptLocation} && chmod 777 ${scriptLocation}`);
     let scriptContent = `cd ${argv.l}
@@ -598,8 +595,8 @@ new ucmd("addPath", "name", "value")
   .perform((argv) => {
     let target = `>> ~/.bash_mine`;
     if (argv.o) return cmd("nano ~/.bash_mine");
-    if (!argv.d && !argv.n) return util.cmderr("name of the path undefined", "addPath");
-    if ((argv.a || argv.e) && !argv.v) return util.cmderr("value of the path undefined", "addPath");
+    if (!argv.d && !argv.n) return cu.cmderr("name of the path undefined", "addPath");
+    if ((argv.a || argv.e) && !argv.v) return cu.cmderr("value of the path undefined", "addPath");
     if (argv.a) cmd(`echo "alias ${argv.n}='${argv.v}'"` + target);
     if (argv.e) cmd(`echo "export ${argv.n}=${argv.v}"` + target);
     if (argv.p) cmd(`echo 'export PATH="${argv.n}:$PATH"'` + target);
@@ -677,7 +674,7 @@ new ucmd("service", "name")
         .map((i) => u.refind(i, /[\d\w].+/).trim())
         .map((i) => u.stringReplace(i, { ".service$": "" }))
         .sort((a, b) => a.length - b.length);
-      return util.multiSelect(target, undefined, undefined, quitOnUdf);
+      return cu.multiSelect(target, undefined, undefined, quitOnUdf);
     };
 
     if (argv.a) return cmd(`sudo systemctl list-units --type service -a --state=active`);
@@ -696,7 +693,7 @@ new ucmd("service", "name")
 
     if (argv.d) {
       let target = await fuzzy(argv.d);
-      return cmdq({ ["disable service: " + target + "(y/N)"]: false }).then((ans) => {
+      return cu.cmdsq("disable service: " + target + "(y/N)").then((ans) => {
         if (ans[0] === "y") cmd(`sudo systemctl disable ${target} && sudo systemctl stop ${target}`, true);
         if (argv.A) return;
         cmd(`sudo service ${target} status`);
@@ -817,7 +814,7 @@ new ucmd("docker")
       cmd(`sudo docker container stop ${argv.R} && sudo docker container rm ${argv.R}`);
       let mounts = target[0]["Mounts"];
       let qs = (volume) =>
-        cmdq({ ["remove volume" + volume + " (N)"]: false }).then((result) => {
+        cu.cmdsq("remove volume" + volume + " (N)").then((result) => {
           if (result && result.toLowerCase() == "y") cmd(`sudo rm -rf ${volume}`);
         });
       if (mounts != undefined) for (let i of mounts) await qs(i["Source"]);
@@ -857,7 +854,7 @@ new ucmd("dc")
     ],
   })
   .perform(async (argv) => {
-    let loadKeys = () => util.multiSelect(u.mapKeys(yamlParser.load("docker-compose.yml").services));
+    let loadKeys = () => cu.multiSelect(u.mapKeys(cu.yamlParser.load("docker-compose.yml").services));
     if (argv.e === true) argv.e = await loadKeys();
     if (argv.l === true) argv.l = await loadKeys();
     if (argv.L === true) argv.L = await loadKeys();
@@ -925,7 +922,7 @@ new ucmd("iptable")
       );
 
     if (argv.S) {
-      if (argv.S == true) return util.cmderr("internet interface not specified", "iptable");
+      if (argv.S == true) return cu.cmderr("internet interface not specified", "iptable");
       //portscan
       return cmd(`sudo iptables -N LOGPSCAN
       sudo iptables -A LOGPSCAN -p tcp --syn -m limit --limit 2000/hour -j RETURN
@@ -974,7 +971,7 @@ new ucmd("pkgjson", "name", "script")
   .perform((argv) => {
     let path = "package.json";
     if (!fs.existsSync(path)) path = "../package.json";
-    if (!fs.existsSync(path)) return util.cmderr("package.json file does not exist", "pkgjson");
+    if (!fs.existsSync(path)) return cu.cmderr("package.json file does not exist", "pkgjson");
     let data = JSON.parse(fs.readFileSync(path).toString());
     if (argv.h) return console.log(data["scripts"][argv.h] != undefined);
     if (argv.l) return console.log(data["scripts"]);
@@ -989,8 +986,7 @@ new ucmd("json", "cmd")
     options: [
       { arg: "c", describe: "command result to json" },
       { arg: "p", describe: "parse file, as a location" },
-      { arg: "s", describe: "separator of the result", default: " " },
-      { arg: "l", describe: "line to skip", default: 0 },
+      { arg: "s", describe: "separator of the result", default: /\s+/ },
       { arg: "k", describe: "key path to get from json, e.g: a,b,c" },
       { arg: "K", describe: "keys of map get exist" },
       { arg: "j", describe: "Json stringify the result", boolean: true },
@@ -1000,7 +996,7 @@ new ucmd("json", "cmd")
     if (argv.p) argv.c = `cat ${argv.p}`;
     let result =
       u._parseJsonCheck(cmd(argv.c, false, true)) == null
-        ? shellParser(cmd(argv.c, false, true), { separator: argv.s, skipLines: argv.l })
+        ? cu.shellParser(cmd(argv.c, false, true), { separator: argv.s })
         : u.stringToJson(cmd(argv.c, false, true));
 
     if (argv.k) {
@@ -1033,8 +1029,8 @@ new ucmd("filter", "cmd", "columns")
   })
   .perform((argv) => {
     let result = cmd(`${argv.m} | awk '{print${argv.c}}'`, false, true);
-    if (argv.j) return console.log(shellParser(result));
-    if (argv.J) return console.log(JSON.stringify(shellParser(result), undefined, ""));
+    if (argv.j) return console.log(cu.shellParser(result));
+    if (argv.J) return console.log(JSON.stringify(cu.shellParser(result), undefined, ""));
     return console.log(result);
   });
 
@@ -1056,7 +1052,7 @@ new ucmd("backup", "file")
 
     if (argv.r) {
       let target = u.mapKeys(backupJson).filter((i) => u.contains(i, argv.r));
-      return util.multiSelect(target).then((data) => {
+      return cu.multiSelect(target).then((data) => {
         fs.unlinkSync(basePath + data);
         delete backupJson[data];
         return fs.writeFileSync(recordsPath, u.jsonToString(backupJson));
@@ -1113,10 +1109,10 @@ new ucmd("ini", "file")
   .perform((argv) => {
     argv.f = fileExistProcess(argv.f);
     cmd(`sudo chmod 777 ${argv.f}`);
-    if (argv.p) console.log(iniParser.parse(fs.readFileSync(argv.f).toString()));
+    if (argv.p) console.log(cu.iniParser.parse(fs.readFileSync(argv.f).toString()));
     if (argv.b) cmd(`u backup ${argv.f}`);
-    let objectify = () => iniParser.parse(fs.readFileSync(argv.f).toString());
-    let towrite = (content) => fs.writeFileSync(argv.f, iniParser.encode(content), { flag: "w+" });
+    let objectify = () => cu.iniParser.parse(fs.readFileSync(argv.f).toString());
+    let towrite = (content) => fs.writeFileSync(argv.f, cu.iniParser.encode(content), { flag: "w+" });
     if (argv.j) return towrite(Object.assign(objectify(), parseJson(argv.j, false)));
     if (argv.i) {
       let data = objectify();
@@ -1166,12 +1162,12 @@ new ucmd("git")
     }
     if (argv.m) {
       let arr = u.stringToArray(argv.m, ",");
-      if (!arr[1]) return util.cmderr("move $branchName,$id not defined", "git");
+      if (!arr[1]) return cu.cmderr("move $branchName,$id not defined", "git");
       cmd(`git checkout ${arr[0]} && git reset --hard ${arr[1]}`);
     }
     if (argv.M) {
       let arr = u.stringToArray(argv.M, ",");
-      if (!arr[1]) return util.cmderr("move $refName,$id not defined", "git");
+      if (!arr[1]) return cu.cmderr("move $refName,$id not defined", "git");
       cmd(`git push --force origin ${arr[1]}:refs/heads/${arr[0]}`);
     }
     if (argv.a) {
@@ -1216,7 +1212,7 @@ new ucmd("usermod", "group", "user")
       return cmd(
         `sudo usermod -aG docker ${argv.u} && sudo chown "${argv.u}":"${argv.u}" /home/"${argv.u}"/.docker -R`
       );
-    if (!argv.g) return util.cmderr("group undefined", "usermod");
+    if (!argv.g) return cu.cmderr("group undefined", "usermod");
     if (argv.i) return cmd(`sudo usermod -aG ${argv.g} ${argv.u}`, true);
     if (argv.r) return cmd(`sudo gpasswd -d ${argv.u} ${argv.g}`, true);
   });
@@ -1319,10 +1315,10 @@ new ucmd("ansible", "name", "command")
     let proxy = argv.p ? process.env.u_proxy : "''";
     if (argv.a) {
       let content = fs.readFileSync(hostLoc).toString();
-      let { user, addr, port } = util.sshGrep(argv.a);
+      let { user, addr, port } = cu.sshGrep(argv.a);
 
       if (u.contains(content, addr)) return console.log(`ansible already has ${addr}`);
-      let contentMap = iniParser.parse(content);
+      let contentMap = cu.iniParser.parse(content);
 
       contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [addr]: true } });
 
@@ -1337,7 +1333,7 @@ new ucmd("ansible", "name", "command")
           u_describe: argv.A ? argv.A : "",
         };
 
-      let str = u.reSub(iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
+      let str = u.reSub(cu.iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
 
       return fs.writeFileSync(hostLoc, str, { flag: "w+" });
     }
@@ -1388,8 +1384,8 @@ new ucmd("result", "cmd")
     if (argv.t) command += ` | head -n +${argv.t}`;
     if (argv.c) command += ` | awk '{print $${u.stringReplace(argv.c, { ",": ',"||",$' }, false)}}'`;
     let result = cmd(command, false, true);
-    if (u.contains(result, "||")) result = shellParser(result, { separator: "||" });
-    else result = shellParser(result);
+    if (u.contains(result, "||")) result = cu.shellParser(result, { separator: "||" });
+    else result = cu.shellParser(result);
     if (argv.j) return console.log(u.jsonToString(result));
     else return console.log(result);
   });
@@ -1497,13 +1493,13 @@ new ucmd("dep")
     let pkgPath;
     if (fs.existsSync("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
     if (fs.existsSync("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
-    if (!pkgPath) return util.cmderr("platform not supported on this os", "dep");
+    if (!pkgPath) return cu.cmderr("platform not supported on this os", "dep");
     let full = () => readdirp.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
     if (argv.l) return full().then(console.log);
     if (argv.r)
       return full().then(async (d) => {
         let processed = d.filter((i) => u.contains(i, argv.r));
-        let target = await util.multiSelect(processed);
+        let target = await cu.multiSelect(processed);
         cmd(`u backup ${target}`);
         cmd(`sudo rm -rf ${target}`);
       });
@@ -1571,7 +1567,7 @@ new ucmd("helper")
       });
     if (argv.u) return cmd(`cd ${projectPath} && rm -rf package-lock.json && git pull && npm i`);
     if (argv.R)
-      return cmdq({ "Uninstall ? (N/y)": false }).then((ans) => {
+      return cu.cmdsq("Uninstall ? (N/y)").then((ans) => {
         if (ans == "y" || ans == "Y")
           return cmd(`rm -rf ${projectPath} && rm -rf ~/.bash_mine && rm -rf ~/.bash_env && rm -rf ~/.application`);
       });
