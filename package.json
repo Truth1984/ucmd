@@ -25,8 +25,8 @@
   },
   "homepage": "https://github.com/Truth1984/ucmd#readme",
   "dependencies": {
-    "awadau": "^1.1.6",
-    "cmdline-util": "^1.0.1",
+    "awadau": "^1.1.7",
+    "cmdline-util": "^1.0.2",
     "convert-units": "^2.3.4",
     "download": "^7.1.0",
     "fluent-ffmpeg": "^2.1.2",

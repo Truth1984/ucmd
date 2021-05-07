@@ -15,11 +15,6 @@ require("./test");
 
 const util = require("../helper/util");
 
-let parseJson = (string, tostring = true) => {
-  if (tostring) return JSON.stringify(eval("(" + string + ")"));
-  return eval("(" + string + ")");
-};
-
 /**
  * return file path
  */
@@ -109,7 +104,7 @@ new ucmd("pid", "id")
       { arg: "N", describe: "network port", boolean: true },
       { arg: "R", describe: "relationship finder", boolean: true },
       { arg: "A", describe: "all display", boolean: true },
-      { arg: "l", describe: "log the pid details", boolean: true },
+      { arg: "l", describe: "log the pid details, type: read,write,open,close,%file,%process,%net,%network" },
     ],
   })
   .perform((argv) => {
@@ -126,7 +121,7 @@ new ucmd("pid", "id")
     if (argv.R || argv.A) dlog("process relationship", `sudo pstree -laps ${pid}`);
     if (argv.n || argv.A) dlog("established network connection (grep)", `sudo lsof -i | grep ${pid}`);
 
-    if (argv.l) return cmd(`sudo strace -p${pid} -s9999 -e write`);
+    if (argv.l) return cmd(`sudo strace -p${pid} -f -t -e ${argv.l == true ? "all" : argv.l}`);
   });
 
 new ucmd("targz", "path")
@@ -886,7 +881,7 @@ new ucmd("post", "url", "data")
   })
   .perform(async (argv) => {
     let target = argv.g ? u.promiseFetchGet : u.promiseFetchPost;
-    await target(argv.u, parseJson(argv.d)).then(console.log);
+    await target(argv.u, cu.jsonParser(argv.d)).then(console.log);
   });
 
 new ucmd("iptable")
@@ -1113,10 +1108,10 @@ new ucmd("ini", "file")
     if (argv.b) cmd(`u backup ${argv.f}`);
     let objectify = () => cu.iniParser.parse(fs.readFileSync(argv.f).toString());
     let towrite = (content) => fs.writeFileSync(argv.f, cu.iniParser.encode(content), { flag: "w+" });
-    if (argv.j) return towrite(Object.assign(objectify(), parseJson(argv.j, false)));
+    if (argv.j) return towrite(Object.assign(objectify(), cu.jsonParser(argv.j, false)));
     if (argv.i) {
       let data = objectify();
-      let input = parseJson(argv.i, false);
+      let input = cu.jsonParser(argv.i, false);
       for (let i of Object.keys(input)) {
         if (!data[i]) data[i] = {};
         if (typeof data[i] == "object") {
