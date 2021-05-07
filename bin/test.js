@@ -39,7 +39,5 @@ new ucmd("_webtest", "port")
     if (argv.r) return cmd(`u docker -r=web-test`);
     if (argv.e) return cmd(`u docker -e=web-test,sh`);
 
-    return cmd(
-      `sudo docker run -d --name web-test --add-host=host.docker.internal:host-gateway -p ${argv.p}:8000 crccheck/hello-world`
-    );
+    return cmd(`sudo docker run -d --name web-test -p ${argv.p}:8000 crccheck/hello-world`);
   });
