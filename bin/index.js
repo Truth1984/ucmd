@@ -1540,6 +1540,42 @@ new ucmd("os", "is")
     });
   });
 
+new ucmd("syscheck")
+  .describer({
+    main: "check system status",
+    options: [{ arg: "h", describe: "/health-check api, require url" }],
+  })
+  .perform(async (argv) => {
+    if (argv.h)
+      return u.promiseFetchGet(argv.h, {}, {}, 1).catch(() => cu.cmderr("heath-check failed", u.url(argv.h), 1, 1));
+
+    const cpup = new Promise((r) => osu.cpuUsage((p) => r(p)));
+    let basic = {
+      freeMem: os.freemem() / 1024 / 1024 + "MB",
+      totalMem: os.totalmem() / 1024 / 1024 + "MB",
+      "freeMem%": osu.freememPercentage() * 100,
+      totalCpu: os.cpus().length,
+      "cpu%": (await cpup) * 100,
+    };
+    if (util.checkOS("linux")) {
+      let df = u.stringToJson(cmd(`u result -j "df -m"`, false, true));
+      let dfResult = df.filter(
+        (item) =>
+          item.Filesystem != "overlay" && !u.contains(item.Filesystem, "tmp") && u.int(item["1M-blocks"]) > 10000
+      );
+      basic["fs"] = dfResult;
+    }
+
+    if (basic["cpu%"] > 80) console.log("cpu using over", u.int(basic["cpu%"]) + "%");
+    if (basic["freeMem%"] < 20 || os.freemem() / 1024 / 1024 < 200)
+      console.log("free mem percent:", u.int(basic["freeMem%"]) + "%\t", u.int(basic.freeMem) + "MB left");
+    if (basic.fs) {
+      for (let i of basic.fs) {
+        if (u.int(i["Use%"]) > 80 || i.Available < 1024) console.log("diskspace usage threshold reached", i);
+      }
+    }
+  });
+
 new ucmd("helper")
   .describer({
     main: "helper for other commands",
