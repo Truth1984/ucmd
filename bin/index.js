@@ -1568,10 +1568,11 @@ new ucmd("syscheck")
 
     if (basic["cpu%"] > 80) console.log("cpu using over", u.int(basic["cpu%"]) + "%");
     if (basic["freeMem%"] < 20 || os.freemem() / 1024 / 1024 < 200)
-      console.log("free mem percent:", u.int(basic["freeMem%"]) + "%\t", u.int(basic.freeMem) + "MB left");
+      console.log("free mem percent:", u.int(basic["freeMem%"]) + "%  ", u.int(basic.freeMem) + "MB left");
     if (basic.fs) {
       for (let i of basic.fs) {
-        if (u.int(i["Use%"]) > 80 || i.Available < 1024) console.log("diskspace usage threshold reached", i);
+        if (u.int(i["Use%"]) > 80 || i.Available < 1024)
+          console.log("disk:", i["Mounted"], i["Use%"], " ", i.Available + "MB left");
       }
     }
   });
