@@ -938,6 +938,8 @@ new ucmd("replace", "filename", "old", "new")
       { arg: "r", describe: "regex test the file" },
       { arg: "g", describe: "global /g", boolean: true },
       { arg: "t", describe: "test the result", boolean: true },
+      { arg: "R", describe: "recursive, param for replace", boolean: true },
+      { arg: "A", describe: "all, param for replace", boolean: true },
     ],
   })
   .perform((argv) => {
@@ -947,7 +949,7 @@ new ucmd("replace", "filename", "old", "new")
     if (argv.h) return console.log(u.contains(content, argv.h));
     if (argv.r) return console.log(new RegExp(argv.r).test(content));
 
-    let processed = u.stringReplace(content, { [argv.o]: argv.n }, true, argv.t);
+    let processed = u.stringReplace(content, { [argv.o]: argv.n }, argv.R, argv.A);
 
     if (argv.t) return console.log(processed);
     return fs.writeFileSync(path, processed);
