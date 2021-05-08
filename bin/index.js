@@ -96,6 +96,7 @@ new ucmd("pid", "id")
     main: "find system information about the target id",
     options: [
       { arg: "p", describe: "pid" },
+      { arg: "f", describe: "find pid, return first result, return -1 if not found, reduce grep noise" },
       { arg: "s", describe: "systemctl status about target", boolean: true },
       { arg: "d", describe: "directory of running process", boolean: true },
       { arg: "P", describe: "process information", boolean: true },
@@ -113,6 +114,13 @@ new ucmd("pid", "id")
       console.log("-----", describe, "-----");
       return cmd(line);
     };
+
+    if (argv.f) {
+      let procList = cu.shellParser(cmd("ps -aux", false, true), { REST: true });
+      let filtered = procList.filter((item) => u.contains(item.COMMAND, argv.f) || u.contains(item["$REST$"], argv.f));
+      console.log(filtered[0] && !u.contains(filtered[0]["$REST$"], ["pid", "-f", argv.f]) ? filtered[0].PID : -1);
+    }
+
     if (argv.s || argv.A) dlog("systemctl", `sudo systemctl status ${pid}`);
     if (argv.d || argv.A) dlog("starting directory", `sudo pwdx ${pid}`);
     if (argv.P || argv.A) dlog("process info (grep)", `sudo ps -auxwwf | grep ${pid}`);
