@@ -1046,14 +1046,14 @@ new ucmd("backup", "file")
   .perform(async (argv) => {
     let basePath = "~/.application/backup/";
     let recordsPath = un.filePathNormalize(basePath, ".readme.json");
-    // { fileName : { date, parentDir, originName } }
     if (!un.fileExist(recordsPath)) un.fileWriteSync("{}", false, recordsPath);
 
     let backupJson = u.stringToJson(un.fileReadSync(recordsPath));
     if (argv.l) return console.log(backupJson);
 
     if (argv.r) {
-      let target = u.mapKeys(backupJson).filter((i) => u.contains(i, argv.r));
+      console.log(backupJson);
+      let target = u.mapKeys(backupJson);
       return cu.multiSelect(target).then((data) => {
         un.fileDelete(basePath + data);
         delete backupJson[data];
@@ -1062,11 +1062,20 @@ new ucmd("backup", "file")
     }
 
     if (!un.fileExist(argv.f)) cu.cmderr("Error: file does not exist", "backup");
-    let filename = un.filePathNormalize(un.filePathAnalyze(argv.f).basename, u.dateFormat("plain"));
+    let fanalyze = un.filePathAnalyze(argv.f);
+    let uuid = un.uuid(false);
+    let filename = un.filePathNormalize(uuid + fanalyze.basename);
 
-    backupJson[filename] = argv.f;
-    cmd(`cp ${argv.f} ${process.env.HOME}/.application/backup/${filename}`);
-    un.fileWriteSync(u.jsonToString(backupJson), false, recordsPath);
+    backupJson[filename] = {
+      originName: argv.f,
+      date: u.dateFormat("locale24"),
+      originFull: fanalyze.full.current,
+      parentDir: fanalyze.full.dirname,
+    };
+    return cu
+      .cmdfull(`cp ${argv.f} ~/.application/backup/${filename}`)
+      .then(() => un.fileWriteSync(u.jsonToString(backupJson), false, recordsPath))
+      .catch((e) => console.log(e));
   });
 
 new ucmd("regex", "string", "regexp")
