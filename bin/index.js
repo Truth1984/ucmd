@@ -13,18 +13,6 @@ require("./test");
 
 const util = require("../helper/util");
 
-/**
- * return file path
- */
-let fileExistProcess = (file) => {
-  file = file.replace("~", process.env.HOME);
-  if (!un.fileExist(file)) {
-    console.log("error:", file, "does not exist");
-    process.exit(1);
-  }
-  return file;
-};
-
 new ucmd("port", "portnum")
   .describer({
     main: "scan for a specific port",
@@ -64,12 +52,19 @@ new ucmd("scan", "ip", "port")
     main: "probe target machine",
     options: [
       { arg: "i", describe: "ip to probe" },
+      { arg: "p", describe: "port to probe" },
       { arg: "A", describe: "all ports", boolean: true },
     ],
   })
   .perform((argv) => {
     let ip = argv.i;
     if (argv.A) return cmd(`nmap -Pn- ${ip}`);
+    if (argv.p)
+      return cu
+        .cmdfull(`nc -z ${ip} ${argv.p}`)
+        .then(() => true)
+        .catch(() => false)
+        .then(console.log);
     cmd(`nmap -p- ${ip}`);
   });
 
@@ -950,7 +945,8 @@ new ucmd("replace", "filename", "old", "new")
     ],
   })
   .perform((argv) => {
-    let path = fileExistProcess(argv.f);
+    if (!un.fileExist(argv.f)) cu.cmderr("Error: file does not exist", "replace");
+    let path = argv.f;
     let content = un.fileReadSync(path);
 
     if (argv.h) return console.log(u.contains(content, argv.h));
@@ -1065,7 +1061,7 @@ new ucmd("backup", "file")
       });
     }
 
-    argv.f = fileExistProcess(argv.f);
+    if (!un.fileExist(argv.f)) cu.cmderr("Error: file does not exist", "backup");
     let filename = un.filePathNormalize(un.filePathAnalyze(argv.f).basename, u.dateFormat("plain"));
 
     backupJson[filename] = argv.f;
@@ -1113,7 +1109,7 @@ new ucmd("ini", "file")
     ],
   })
   .perform((argv) => {
-    argv.f = fileExistProcess(argv.f);
+    if (!un.fileExist(argv.f)) cu.cmderr("Error: file does not exist", "ini");
     cmd(`sudo chmod 777 ${argv.f}`);
     if (argv.p) console.log(cu.iniParser.parse(un.fileReadSync(argv.f)));
     if (argv.b) cmd(`u backup ${argv.f}`);
