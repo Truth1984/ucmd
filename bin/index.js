@@ -985,6 +985,7 @@ new ucmd("json", "cmd")
     main: "parse result to json",
     options: [
       { arg: "c", describe: "command result to json" },
+      { arg: "S", describe: "parse from string directly" },
       { arg: "p", describe: "parse file, as a location" },
       { arg: "s", describe: "separator of the result", default: /\s+/ },
       { arg: "k", describe: "key path to get from json, e.g: a,b,c" },
@@ -993,6 +994,7 @@ new ucmd("json", "cmd")
     ],
   })
   .perform((argv) => {
+    if (argv.S) return console.log(cu.jsonParser(argv.S));
     if (argv.p) argv.c = `cat ${argv.p}`;
     let result =
       u._parseJsonCheck(cmd(argv.c, false, true)) == null
