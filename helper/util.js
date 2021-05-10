@@ -1,5 +1,6 @@
 const cmd = require("./_cmd");
 const u = require("awadau");
+const cu = require("cmdline-util");
 
 let util = {};
 
@@ -32,7 +33,7 @@ util.ansibleInventoryData = (pattern = "all") => {
   let result = cmd(`ansible-inventory -i ${util.ansibleConf.inventory_location} --host ${pattern}`, false, true, true);
   if (result.status == 0) return u.stringToJson(result.stdout);
 
-  let { user, port, addr } = util.sshGrep(pattern);
+  let { user, port, addr } = cu.sshGrep(pattern);
   return {
     u_name: "unknown",
     u_describe: "unknown",

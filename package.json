@@ -1,6 +1,6 @@
 {
   "name": "ucmd",
-  "version": "1.0.26",
+  "version": "1.1.0",
   "description": "quick bash cmd alias",
   "main": "./bin/index.js",
   "scripts": {
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/Truth1984/ucmd#readme",
   "dependencies": {
     "awadau": "^1.1.7",
+    "backend-core": "^2.3.14",
     "cmdline-util": "^1.1.0",
     "convert-units": "^2.3.4",
     "download": "^7.1.0",

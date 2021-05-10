@@ -6,10 +6,8 @@ var download = require("../helper/downloader");
 var recorder = require("../helper/quickRecord");
 var os = require("os");
 var osu = require("os-utils");
-var fs = require("fs");
-var readdirp = require("readdirp");
-var paths = require("path");
-var u = require("awadau");
+const u = require("awadau");
+const un = require("backend-core").un;
 const cu = require("cmdline-util");
 require("./test");
 
@@ -20,7 +18,7 @@ const util = require("../helper/util");
  */
 let fileExistProcess = (file) => {
   file = file.replace("~", process.env.HOME);
-  if (!fs.existsSync(file)) {
+  if (!un.fileExist(file)) {
     console.log("error:", file, "does not exist");
     process.exit(1);
   }
@@ -153,7 +151,7 @@ new ucmd("open", "location")
     ],
   })
   .perform((argv) => {
-    if (argv.d) argv.l = paths.join("~/Documents/", argv.l);
+    if (argv.d) argv.l = un.filePathNormalize("~/Documents/", argv.l);
     if (process.platform == "darwin") cmd(`open ${argv.l}`);
     if (process.platform == "linux") cmd(`xdg-open ${argv.l}`);
     if (process.platform == "win32") cmd(`start ${argv.l}`);
@@ -270,7 +268,7 @@ new ucmd("search", "target", "basedir")
     };
 
     if (argv.I) options = u.mapMerge(options, { fileFilter: fileIgnores });
-    let nameArr = await readdirp.promise(basedir, options);
+    let nameArr = await un.fileReaddir(basedir, options);
 
     let result = [];
 
@@ -285,7 +283,7 @@ new ucmd("search", "target", "basedir")
     if (argv.T) {
       result = result.filter((i) => {
         // eslint-disable-next-line no-unused-vars
-        let { atime, ctime, mtime } = fs.lstatSync(i.fullPath);
+        let { atime, ctime, mtime } = un.fileStat(i.fullPath);
         return eval(argv.T);
       });
     }
@@ -342,7 +340,7 @@ new ucmd("sys", "target")
 
     if (argv.C)
       return cmd("for user in $(cut -f1 -d: /etc/passwd); do echo ---$user--- ; sudo crontab -u $user -l ; done");
-    if (fs.lstatSync(argv.t).isDirectory()) return cmd(`cd ${argv.t} && ls -alFh`);
+    if (un.fileIsDir(argv.t)) return cmd(`cd ${argv.t} && ls -alFh`);
     else return cmd(`stat ${argv.t}`);
   });
 
@@ -357,7 +355,7 @@ new ucmd("mount", "target")
       { arg: "I", describe: "unmounted information" },
     ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
     let findUnmount = () => {
       let list = cmd(`lsblk --noheadings --raw -o NAME,MOUNTPOINT | awk '$1~/[[:digit:]]/ && $2 == ""'`, false, true);
       return u
@@ -371,7 +369,7 @@ new ucmd("mount", "target")
       let device = mountArr[0];
       let directory = mountArr[1];
 
-      if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+      await un.fileMkdir(directory, true);
       return cmd(`sudo mount ${device} ${directory}`);
     }
 
@@ -495,12 +493,12 @@ new ucmd("gitclone", "name", "user")
   })
   .perform((argv) => {
     if (argv.i) {
-      if (!fs.existsSync(".git")) return util.cmderr("git folder not found", "gitclone");
+      if (!un.fileExist(".git")) return util.cmderr("git folder not found", "gitclone");
       return cmd(`cp -a $DIR/gitfile/. ./`);
     }
 
     if (argv.D) {
-      if (!fs.existsSync("package.json")) return util.cmderr("package.json not found", "gitclone");
+      if (!un.fileExist("package.json")) return util.cmderr("package.json not found", "gitclone");
       return cmd(`bash <(curl -s https://truth1984.github.io/testSites/node/prep.sh)`);
     }
     let user = argv.u;
@@ -527,8 +525,9 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     argv.l = argv.l.replace("~", process.env.HOME);
     let stored = "$UDATA/cron/cronfile";
     let content = cmd("crontab -l ", false, true);
-    let screenName = "gitwatch_" + paths.basename(argv.l);
-    let scriptLocation = "$UDATA/gitwatch/gitwatch_" + paths.basename(argv.l) + ".sh";
+    let basename = un.filePathAnalyze(argv.l).basename;
+    let screenName = "gitwatch_" + basename;
+    let scriptLocation = "$UDATA/gitwatch/gitwatch_" + basename + ".sh";
 
     if (argv.r) {
       cmd(`rm ${scriptLocation}`);
@@ -537,7 +536,7 @@ new ucmd("gitwatch", "location", "branchName", "interval")
         .split("\n")
         .filter((c) => c.indexOf(scriptLocation) == -1)
         .join("\n");
-      fs.writeFileSync(stored, content);
+      un.fileWriteSync(content, false, stored);
       return cmd("crontab " + stored);
     }
 
@@ -548,14 +547,14 @@ new ucmd("gitwatch", "location", "branchName", "interval")
     let scriptContent = `cd ${argv.l}
 var=$(git pull origin ${argv.b} 2>&1)
 if echo $var | grep -q "changed"; then
-    echo $(date) >> $UDATA/log/gitwatch_${paths.basename(argv.l)}.log
-    echo $var >> $UDATA/log/gitwatch_${paths.basename(argv.l)}.log
+    echo $(date) >> $UDATA/log/gitwatch_${basename}.log
+    echo $var >> $UDATA/log/gitwatch_${basename}.log
 fi;
 echo $var;
 `;
     let screencmd = `screen -dmS ${screenName} watch -n ${argv.i} "sh ${scriptLocation}"`;
-    fs.writeFileSync(scriptLocation, scriptContent);
-    fs.writeFileSync(stored, content + `\n@reboot ${screencmd} \n`);
+    un.fileWriteSync(scriptContent, false, scriptLocation);
+    un.fileWriteSync(content + `\n@reboot ${screencmd} \n`, false, stored);
     cmd(screencmd);
     cmd("crontab " + stored);
     console.log("further modify:", scriptLocation);
@@ -813,7 +812,7 @@ new ucmd("docker")
       cmd(sentence);
     }
     if (argv.R) {
-      let target = JSON.parse(cmd(`sudo docker inspect ${argv.R}`, false, true));
+      let target = u.stringToJson(cmd(`sudo docker inspect ${argv.R}`, false, true));
       cmd(`sudo docker container stop ${argv.R} && sudo docker container rm ${argv.R}`);
       let mounts = target[0]["Mounts"];
       let qs = (volume) =>
@@ -863,7 +862,7 @@ new ucmd("dc")
     if (argv.L === true) argv.L = await loadKeys();
 
     if (argv.u) {
-      if (fs.existsSync("docker-compose.yml") && !fs.existsSync(".env")) cmd(`touch .env`);
+      if (un.fileExist("docker-compose.yml") && !un.fileExist(".env")) cmd(`touch .env`);
       return cmd(`sudo docker-compose --env-file ${u.typeCheck(argv.u, "str") ? argv.u : ".env"} up -d`);
     }
     if (argv.d) return cmd("sudo docker-compose down --remove-orphans");
@@ -952,7 +951,7 @@ new ucmd("replace", "filename", "old", "new")
   })
   .perform((argv) => {
     let path = fileExistProcess(argv.f);
-    let content = fs.readFileSync(path).toString();
+    let content = un.fileReadSync(path);
 
     if (argv.h) return console.log(u.contains(content, argv.h));
     if (argv.r) return console.log(new RegExp(argv.r).test(content));
@@ -960,7 +959,7 @@ new ucmd("replace", "filename", "old", "new")
     let processed = u.stringReplace(content, { [argv.o]: argv.n }, !!argv.R, !!argv.A);
 
     if (argv.t) return console.log(processed);
-    return fs.writeFileSync(path, processed);
+    return un.fileWriteSync(processed, false, path);
   });
 
 new ucmd("pkgjson", "name", "script")
@@ -975,14 +974,14 @@ new ucmd("pkgjson", "name", "script")
   })
   .perform((argv) => {
     let path = "package.json";
-    if (!fs.existsSync(path)) path = "../package.json";
-    if (!fs.existsSync(path)) return cu.cmderr("package.json file does not exist", "pkgjson");
-    let data = JSON.parse(fs.readFileSync(path).toString());
+    if (!un.fileExist(path)) path = "../package.json";
+    if (!un.fileExist(path)) return cu.cmderr("package.json file does not exist", "pkgjson");
+    let data = u.stringToJson(un.fileReadSync(path));
     if (argv.h) return console.log(data["scripts"][argv.h] != undefined);
     if (argv.l) return console.log(data["scripts"]);
     if (argv.s == undefined) return console.log(data["scripts"][argv.s]);
     data["scripts"][argv.n] = argv.s;
-    fs.writeFileSync(path, JSON.stringify(data, undefined, "  "));
+    return un.fileWriteSync(u.jsonToString(data, "  "));
   });
 
 new ucmd("json", "cmd")
@@ -1018,7 +1017,7 @@ new ucmd("json", "cmd")
       return console.log(u.mapGetExist(copy, keys));
     }
 
-    if (argv.j) console.log(JSON.stringify(result));
+    if (argv.j) console.log(cu.jsonParser(result));
     else console.log(result);
   });
 
@@ -1041,7 +1040,7 @@ new ucmd("filter", "cmd", "columns")
 
 new ucmd("backup", "file")
   .describer({
-    main: "backup a file to normal backup folder",
+    main: "backup a file to local backup folder",
     options: [
       { arg: "f", describe: "file location" },
       { arg: "l", describe: "list current backed up file", boolean: true },
@@ -1049,27 +1048,29 @@ new ucmd("backup", "file")
     ],
   })
   .perform(async (argv) => {
-    let basePath = process.env.HOME + "/.application/backup/";
-    let recordsPath = basePath + ".readme.json";
-    if (!fs.existsSync(recordsPath)) fs.writeFileSync(recordsPath, "{}");
-    let backupJson = JSON.parse(fs.readFileSync(recordsPath).toString());
+    let basePath = "~/.application/backup/";
+    let recordsPath = un.filePathNormalize(basePath, ".readme.json");
+    // { fileName : { date, parentDir, originName } }
+    if (!un.fileExist(recordsPath)) un.fileWriteSync("{}", false, recordsPath);
+
+    let backupJson = u.stringToJson(un.fileReadSync(recordsPath));
     if (argv.l) return console.log(backupJson);
 
     if (argv.r) {
       let target = u.mapKeys(backupJson).filter((i) => u.contains(i, argv.r));
       return cu.multiSelect(target).then((data) => {
-        fs.unlinkSync(basePath + data);
+        un.fileDelete(basePath + data);
         delete backupJson[data];
-        return fs.writeFileSync(recordsPath, u.jsonToString(backupJson));
+        return un.fileWriteSync(u.jsonToString(backupJson), false, recordsPath);
       });
     }
 
     argv.f = fileExistProcess(argv.f);
-    let filename = paths.basename(argv.f) + u.dateFormat("plain");
+    let filename = un.filePathNormalize(un.filePathAnalyze(argv.f).basename, u.dateFormat("plain"));
 
     backupJson[filename] = argv.f;
     cmd(`cp ${argv.f} ${process.env.HOME}/.application/backup/${filename}`);
-    fs.writeFileSync(recordsPath, u.jsonToString(backupJson));
+    un.fileWriteSync(u.jsonToString(backupJson), false, recordsPath);
   });
 
 new ucmd("regex", "string", "regexp")
@@ -1114,10 +1115,10 @@ new ucmd("ini", "file")
   .perform((argv) => {
     argv.f = fileExistProcess(argv.f);
     cmd(`sudo chmod 777 ${argv.f}`);
-    if (argv.p) console.log(cu.iniParser.parse(fs.readFileSync(argv.f).toString()));
+    if (argv.p) console.log(cu.iniParser.parse(un.fileReadSync(argv.f)));
     if (argv.b) cmd(`u backup ${argv.f}`);
-    let objectify = () => cu.iniParser.parse(fs.readFileSync(argv.f).toString());
-    let towrite = (content) => fs.writeFileSync(argv.f, cu.iniParser.encode(content), { flag: "w+" });
+    let objectify = () => cu.iniParser.parse(un.fileReadSync(argv.f));
+    let towrite = (content) => un.fileWriteSync(cu.iniParser.encode(content), true, argv.f);
     if (argv.j) return towrite(Object.assign(objectify(), cu.jsonParser(argv.j, false)));
     if (argv.i) {
       let data = objectify();
@@ -1260,8 +1261,8 @@ new ucmd("install", "name")
   })
   .perform((argv) => {
     let platform = "";
-    if (fs.existsSync("/etc/debian_version")) platform = "apt";
-    if (fs.existsSync("/etc/redhat-release")) platform = "yum";
+    if (un.fileExist("/etc/debian_version")) platform = "apt";
+    if (un.fileExist("/etc/redhat-release")) platform = "yum";
     if (os.platform() == "darwin") platform = "brew";
     if (os.platform() == "win32") platform = "choco";
 
@@ -1308,9 +1309,9 @@ new ucmd("ansible", "name", "command")
   })
   .perform(async (argv) => {
     let hostLoc = util.ansibleConf.inventory_location;
-    if (!fs.existsSync(hostLoc)) {
-      fs.mkdirSync(paths.dirname(hostLoc), { recursive: true });
-      fs.writeFileSync(hostLoc, "");
+    if (!un.fileExist(hostLoc)) {
+      await un.fileMkdir(un.filePathAnalyze(hostLoc).dirname);
+      un.fileWriteSync("", false, hostLoc);
     }
     let hostname = argv.n;
     let playbookdir = util.ansibleConf.playbookdir;
@@ -1319,7 +1320,7 @@ new ucmd("ansible", "name", "command")
       "DISPLAY_SKIPPED_HOSTS=false ANSIBLE_CALLBACK_WHITELIST=profile_tasks ANSIBLE_DEPRECATION_WARNINGS=False";
     let proxy = argv.p ? process.env.u_proxy : "''";
     if (argv.a) {
-      let content = fs.readFileSync(hostLoc).toString();
+      let content = un.fileReadSync(hostLoc);
       let { user, addr, port } = cu.sshGrep(argv.a);
 
       if (u.contains(content, addr)) return console.log(`ansible already has ${addr}`);
@@ -1340,7 +1341,7 @@ new ucmd("ansible", "name", "command")
 
       let str = u.reSub(cu.iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
 
-      return fs.writeFileSync(hostLoc, str, { flag: "w+" });
+      return un.fileWriteSync(str, true, hostLoc);
     }
 
     if (argv.c) {
@@ -1353,7 +1354,7 @@ new ucmd("ansible", "name", "command")
 
     if (argv.s) {
       return cmd(
-        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_http_proxy=${proxy} -e apb_runtype=script -e apb_script='${paths.resolve(
+        `${preconfig} ansible-playbook ${debugmode} -i ${hostLoc} -e apb_host=${hostname} -e apb_http_proxy=${proxy} -e apb_runtype=script -e apb_script='${un.filePathNormalize(
           argv.s
         )}' ${playbookdir}`,
         true
@@ -1405,11 +1406,11 @@ new ucmd("exist", "path")
     ],
   })
   .perform((argv) => {
-    let exist = fs.existsSync(argv.p);
+    let exist = un.fileExist(argv.p);
     if (!exist) return console.log(false);
-    if (argv.f) return console.log(!fs.lstatSync(argv.p).isDirectory());
-    if (argv.d) return console.log(fs.lstatSync(argv.p).isDirectory());
-    return console.log(true);
+    if (argv.f) return console.log(!un.fileIsDir(argv.p));
+    if (argv.d) return console.log(un.fileIsDir(argv.p));
+    return console.log(exist);
   });
 
 new ucmd("rpush", "to whom", "from file", "to file")
@@ -1463,7 +1464,7 @@ new ucmd("rpull", "from whom", "from file", "to file")
       { arg: "C", describe: "compression, -z option, might be slower", boolean: true },
     ],
   })
-  .perform((argv) => {
+  .perform(async (argv) => {
     let source = argv.s;
     let target = argv.t;
 
@@ -1480,8 +1481,8 @@ new ucmd("rpull", "from whom", "from file", "to file")
       let rArg = "-aAXvPh";
       if (argv.C) rArg += "z";
 
-      let targetdir = paths.resolve(process.env.PWD, target, i);
-      fs.mkdirSync(targetdir, { recursive: true });
+      let targetdir = un.filePathNormalize(process.env.PWD, target, i);
+      await un.fileMkdir(targetdir, true);
       cmd(`rsync ${rArg} -e 'ssh -p ${port}' ${opt} ${username + "@" + addr}:'${source}' ${targetdir}`, true);
     }
   });
@@ -1496,10 +1497,10 @@ new ucmd("dep")
   })
   .perform((argv) => {
     let pkgPath;
-    if (fs.existsSync("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
-    if (fs.existsSync("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
+    if (un.fileExist("/etc/debian_version")) pkgPath = "/etc/apt/sources.list.d";
+    if (un.fileExist("/etc/redhat-release")) pkgPath = "/etc/yum.repos.d";
     if (!pkgPath) return cu.cmderr("platform not supported on this os", "dep");
-    let full = () => readdirp.promise(pkgPath).then((d) => d.map((i) => i.fullPath));
+    let full = () => un.fileReaddir(pkgPath).then((d) => d.map((i) => i.fullPath));
     if (argv.l) return full().then(console.log);
     if (argv.r)
       return full().then(async (d) => {
@@ -1521,6 +1522,7 @@ new ucmd("os", "is")
   })
   .perform((argv) => {
     if (argv.i) {
+      argv.i = argv.i.toString().toLowerCase();
       if (argv.i == "win") return console.log(os.platform() == "win32");
       if (argv.i == "linux") return console.log(os.platform() == "linux");
       if (argv.i == "mac") return console.log(os.platform() == "darwin");
@@ -1528,7 +1530,7 @@ new ucmd("os", "is")
         return console.log(cmd(`command -v ${argv.i}`, 0, 1, 1).status == 0);
       if (os.platform() != "linux") throw "system is not linux based";
 
-      let content = fs.readFileSync("/etc/os-release").toString().toLowerCase();
+      let content = un.fileReadSync("/etc/os-release").toLowerCase();
       return console.log(u.contains(content, argv.i));
     }
     if (argv.v) {
