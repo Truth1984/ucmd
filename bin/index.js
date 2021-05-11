@@ -980,7 +980,7 @@ new ucmd("pkgjson", "name", "script")
     return un.fileWriteSync(u.jsonToString(data, "  "));
   });
 
-new ucmd("json", "cmd")
+new ucmd("json")
   .describer({
     main: "parse result to json",
     options: [
@@ -994,12 +994,16 @@ new ucmd("json", "cmd")
     ],
   })
   .perform((argv) => {
-    if (argv.S) return console.log(cu.jsonParser(argv.S));
-    if (argv.p) argv.c = `cat ${argv.p}`;
-    let result =
-      u._parseJsonCheck(cmd(argv.c, false, true)) == null
-        ? cu.shellParser(cmd(argv.c, false, true), { separator: argv.s })
-        : u.stringToJson(cmd(argv.c, false, true));
+    let result = {};
+    if (argv.S) result = cu.jsonParser(argv.S);
+    if (argv.p) result = cu.jsonParser(un.fileReadSync(argv.p));
+    if (argv.c) {
+      let cmdResult = cmd(argv.c, false, true);
+      result =
+        u._parseJsonCheck(cmdResult) == null
+          ? cu.shellParser(cmdResult, { separator: argv.s })
+          : cu.jsonParser(cmdResult);
+    }
 
     if (argv.k) {
       let copy = u.deepCopy(result);
@@ -1011,7 +1015,7 @@ new ucmd("json", "cmd")
     if (argv.K) {
       let copy = u.deepCopy(result);
       let keys = u.stringToArray(argv.K, ",");
-      if (Array.isArray(copy)) return console.log(copy.map((i) => u.mapGetExist(i, ...keys)));
+      if (Array.isArray(copy)) return console.log(u.arrayGet(copy, ...keys));
       return console.log(u.mapGetExist(copy, keys));
     }
 
@@ -1032,7 +1036,7 @@ new ucmd("filter", "cmd", "columns")
   .perform((argv) => {
     let result = cmd(`${argv.m} | awk '{print${argv.c}}'`, false, true);
     if (argv.j) return console.log(cu.shellParser(result));
-    if (argv.J) return console.log(JSON.stringify(cu.shellParser(result), undefined, ""));
+    if (argv.J) return console.log(u.jsonToString(cu.shellParser(result), ""));
     return console.log(result);
   });
 
@@ -1232,8 +1236,7 @@ new ucmd("usermod", "group", "user")
 
 new ucmd("link", "name")
   .describer({
-    main:
-      "link(ln) particular command to target user group, solve command not found issue, if command already exist, use $chmod",
+    main: "link(ln) particular command to target user group, solve command not found issue, if command already exist, use $chmod",
     options: [
       { arg: "n", describe: "name of the command" },
       { arg: "o", describe: "original link trace" },
