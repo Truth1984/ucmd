@@ -10,7 +10,9 @@ module.exports = class ucmd {
   }
 
   /**
-   * @param {{main:string,options:[{arg:string, describe:string, default:any, boolean:boolean, alias:any}]|{arg:string, describe:string, default:any, boolean:boolean, alias:any}}} description
+   * @typedef {{main:string,options:[{arg:string, describe:string, default:any, boolean:boolean, array:boolean, alias:any}} yopt
+   *
+   * @param {[yopt]|yopt} description
    */
   describer(description) {
     if (!description.options) description.options = [];

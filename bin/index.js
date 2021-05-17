@@ -1693,6 +1693,9 @@ new ucmd("helper")
         reload: "nginx -s reload",
         "bind-failed": "sudo setenforce 0",
       },
+      systemctl:{
+        limit:"journalctl --vacuum-size=1G"
+      }
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);

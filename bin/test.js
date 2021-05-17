@@ -19,10 +19,14 @@ new ucmd("_do", "task")
   .describer({ main: "pipe task", options: [{ arg: "t", describe: "task to pipe", alias: "pipe" }] })
   .perform((argv) => cmd(argv.t));
 
-new ucmd("_echo", "line").describer({ main: "echo cmd", options: [{ arg: "l", describe: "line" }] }).perform((argv) => {
-  console.log(argv.l);
-  cmd(`echo '${argv.l}'`);
-});
+new ucmd("_echo", "line")
+  .describer({ main: "echo cmd", options: [{ arg: "l", describe: "line", array: true }] })
+  .perform((argv) => {
+    console.log(argv);
+    cmd(`echo '${argv.l}'`);
+  });
+
+new ucmd("_env").perform((argv) => console.log(process.env, process.argv, argv));
 
 new ucmd("_debug").describer({ main: "debug mode" }).perform((argv) => console.log("UDEBUG=1"));
 

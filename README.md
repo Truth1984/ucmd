@@ -1,3 +1,7 @@
+## DEPRECATED
+
+This project is no longer maintained, use `ucmd2` instead
+
 ## install
 
 one line : `npm run build`
