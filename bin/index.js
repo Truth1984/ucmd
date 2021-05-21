@@ -7,8 +7,8 @@ var recorder = require("../helper/quickRecord");
 var os = require("os");
 var osu = require("os-utils");
 const u = require("awadau");
-const un = require("backend-core").un;
 const cu = require("cmdline-util");
+const un = require("../helper/un");
 require("./test");
 
 const util = require("../helper/util");
@@ -502,6 +502,7 @@ new ucmd("gitclone", "name", "user")
     cmd(`git clone https://github.com/${user}/${project}.git ${dest}`);
   });
 
+//?
 new ucmd("gitwatch", "location", "branchName", "interval")
   .describer({
     main: "DEPRECATED, USE JENKINS INSTEAD, watch file changes, auto pull every X seconds, require git, crontab, watch",
@@ -627,6 +628,7 @@ new ucmd("lock", "file")
     }
   });
 
+//?
 new ucmd("saveop", "cmd", "fileLocation")
   .describer({
     main: "save the out put of a command to the file",
@@ -661,11 +663,8 @@ new ucmd("service", "name")
   .perform(async (argv) => {
     let fuzzy = (name, quitOnUdf = true) => {
       if (argv.A) return name;
-      let jsonresult = cmd(`u json -j "systemctl list-units --type service -a | cat"`, false, true);
-      let services = u
-        .stringToJson(jsonresult)
-        .filter((i) => i != null)
-        .map((i) => i.UNIT);
+      let jsonresult = cu.shellParser(cmd("systemctl list-units --type service -a | cat", false, true));
+      let services = jsonresult.filter((i) => i != null).map((i) => i.UNIT);
       let target = services
         .filter((item) => item.indexOf(name) > -1)
         .map((i) => u.refind(i, /[\d\w].+/).trim())
@@ -851,7 +850,7 @@ new ucmd("dc")
     ],
   })
   .perform(async (argv) => {
-    let loadKeys = () => cu.multiSelect(u.mapKeys(cu.yamlParser.load("docker-compose.yml").services));
+    let loadKeys = () => cu.multiSelect(u.mapKeys(cu.yamlParser("docker-compose.yml").services));
     if (argv.e === true) argv.e = await loadKeys();
     if (argv.l === true) argv.l = await loadKeys();
     if (argv.L === true) argv.L = await loadKeys();
@@ -1023,6 +1022,7 @@ new ucmd("json")
     else console.log(result);
   });
 
+// ?
 new ucmd("filter", "cmd", "columns")
   .describer({
     main: "filter columns of cmd",
@@ -1040,6 +1040,7 @@ new ucmd("filter", "cmd", "columns")
     return console.log(result);
   });
 
+// ?
 new ucmd("backup", "file")
   .describer({
     main: "backup a file to local backup folder",
@@ -1084,6 +1085,7 @@ new ucmd("backup", "file")
       .catch((e) => console.log(e));
   });
 
+// ?
 new ucmd("regex", "string", "regexp")
   .describer({
     main: 'js regular expression, better use " to wrap around string',
@@ -1126,10 +1128,10 @@ new ucmd("ini", "file")
   .perform((argv) => {
     if (!un.fileExist(argv.f)) cu.cmderr("Error: file does not exist", "ini");
     cmd(`sudo chmod 777 ${argv.f}`);
-    if (argv.p) console.log(cu.iniParser.parse(un.fileReadSync(argv.f)));
+    if (argv.p) console.log(cu.iniParser(un.fileReadSync(argv.f)));
     if (argv.b) cmd(`u backup ${argv.f}`);
-    let objectify = () => cu.iniParser.parse(un.fileReadSync(argv.f));
-    let towrite = (content) => un.fileWriteSync(cu.iniParser.encode(content), true, argv.f);
+    let objectify = () => cu.iniParser(un.fileReadSync(argv.f));
+    let towrite = (content) => un.fileWriteSync(cu.iniWriter(content), true, argv.f);
     if (argv.j) return towrite(Object.assign(objectify(), cu.jsonParser(argv.j, false)));
     if (argv.i) {
       let data = objectify();
@@ -1211,6 +1213,7 @@ new ucmd("git")
     if (!argv.L) return adog();
   });
 
+//?
 new ucmd("usermod", "group", "user")
   .describer({
     main: "use usermod to assign privilege to particular user, take effect after reboot",
@@ -1334,7 +1337,7 @@ new ucmd("ansible", "name", "command")
       let { user, addr, port } = cu.sshGrep(argv.a);
 
       if (u.contains(content, addr)) return console.log(`ansible already has ${addr}`);
-      let contentMap = cu.iniParser.parse(content);
+      let contentMap = cu.iniParser(content);
 
       contentMap = u.mapMergeDeep(contentMap, { [hostname]: { [addr]: true } });
 
@@ -1349,7 +1352,7 @@ new ucmd("ansible", "name", "command")
           u_describe: argv.A ? argv.A : "",
         };
 
-      let str = u.reSub(cu.iniParser.encode(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
+      let str = u.reSub(cu.iniWriter(contentMap), /(\d+.\d+.\d+.\d+)=true/, "$1");
 
       return un.fileWriteSync(str, true, hostLoc);
     }
@@ -1693,9 +1696,9 @@ new ucmd("helper")
         reload: "nginx -s reload",
         "bind-failed": "sudo setenforce 0",
       },
-      systemctl:{
-        limit:"journalctl --vacuum-size=1G"
-      }
+      systemctl: {
+        limit: "journalctl --vacuum-size=1G",
+      },
     };
     if (argv.n) console.log(list[argv.n]);
     else console.log(list);
